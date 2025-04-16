@@ -84,11 +84,20 @@ def a_star(start, goal, grid, character_size, furniture_rects):
 
 def master_patrol(master_pos, waypoints):
     if not waypoints:
-        while True:
+        attempts = 0
+        max_attempts = 10
+        while attempts < max_attempts:
             new_waypoint = [random.randint(1, ROWS-2), random.randint(1, COLS-2)]
-            if map_grid[new_waypoint[0]][new_waypoint[1]] == 0 and not check_furniture_collision(new_waypoint, MASTER_SIZE, furniture_rects):
-                waypoints.append(new_waypoint)
-                break
+            if (map_grid[new_waypoint[0]][new_waypoint[1]] == 0 and 
+                not check_furniture_collision(new_waypoint, MASTER_SIZE, furniture_rects)):
+                path = a_star(master_pos, new_waypoint, map_grid, MASTER_SIZE, furniture_rects)
+                if path:  # Chỉ thêm waypoint nếu có đường đi đến đó
+                    waypoints.append(new_waypoint)
+                    break
+            attempts += 1
+        if attempts >= max_attempts:
+            print("Warning: Could not find a reachable waypoint!")
+            return None
     return a_star(master_pos, waypoints[0], map_grid, MASTER_SIZE, furniture_rects)
 
 def master_chase(master_pos, thief_pos):

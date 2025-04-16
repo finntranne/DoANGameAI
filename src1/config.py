@@ -5,7 +5,7 @@ pygame.init()
 
 # Cài đặt màn hình
 SCREEN_WIDTH = 1200
-SCREEN_HEIGHT = 800
+SCREEN_HEIGHT = 780
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Thief's Escape with Vision Zones")
 
@@ -24,8 +24,8 @@ YELLOW = (255, 255, 0)  # Viền đối tượng nội thất
 font = pygame.font.SysFont(None, 30)
 
 # Tầm nhìn
-THIEF_VISION_RANGE = 2
-MASTER_VISION_RANGE = 3
+THIEF_VISION_RANGE = 4
+MASTER_VISION_RANGE = 6
 
 # Frame rate cho hoạt hình
 FRAME_RATE = 1

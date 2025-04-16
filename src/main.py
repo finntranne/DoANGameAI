@@ -10,7 +10,7 @@ pygame.init()
 
 # Cài đặt màn hình trước khi load bản đồ
 SCREEN_WIDTH = 1200
-SCREEN_HEIGHT = 800
+SCREEN_HEIGHT = 780
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Thief's Escape with Vision Zones")
 

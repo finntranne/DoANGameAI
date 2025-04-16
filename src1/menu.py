@@ -220,7 +220,7 @@ class Menu:
         # Thêm nút mũi tên để chọn thuật toán (AI)
         button_ai_left_width = 40
         button_ai_left_height = 40
-        button_ai_left_x = SCREEN_WIDTH // 2 - 300
+        button_ai_left_x = SCREEN_WIDTH // 2 - 320
         button_ai_left_y = SCREEN_HEIGHT - 40
         ai_left_button = Button(
             button_ai_left_x,
@@ -236,7 +236,7 @@ class Menu:
 
         button_ai_right_width = 40
         button_ai_right_height = 40
-        button_ai_right_x = SCREEN_WIDTH // 2 + 250
+        button_ai_right_x = SCREEN_WIDTH // 2 + 270
         button_ai_right_y = SCREEN_HEIGHT - 40
         ai_right_button = Button(
             button_ai_right_x,
@@ -334,10 +334,7 @@ class Menu:
 
         # Tính toán vị trí trung tâm giữa hai nút để đặt tên thuật toán
         ai_text = self.font.render(f"{self.selected_ai}", True, self.text_color)
-        left_button_x = SCREEN_WIDTH // 2 - 300  # Vị trí nút trái
-        right_button_x = SCREEN_WIDTH // 2 + 250  # Vị trí nút phải
-        ai_center_x = (left_button_x + right_button_x) // 2  # Tọa độ x trung tâm giữa hai nút
-        ai_rect = ai_text.get_rect(center=(ai_center_x, SCREEN_HEIGHT - 20))
+        ai_rect = ai_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 20))
         screen.blit(ai_text, ai_rect)
 
     def handle_event(self, event, screen):

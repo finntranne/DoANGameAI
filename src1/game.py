@@ -10,10 +10,10 @@ from menu import Menu  # Import Menu từ menu.py
 
 # Danh sách thuật toán
 AI_ALGORITHMS = {
-    "Breadth-First Search (BFS)": None,
-    "Depth-First Search (DFS)": None,
-    "Uniform Cost Search (UCS)": None,
-    "Iterative Deepening DFS (IDDFS)": None,
+    "Breadth-First Search": None,
+    "Depth-First Search": None,
+    "Uniform Cost Search": None,
+    "Iterative Deepening DFS": None,
     "Greedy Best-First Search": None,
     "A* Search": a_star,  # Chỉ A* được triển khai
     "IDA* Search": None,
@@ -208,7 +208,7 @@ while True:
                                 break
 
                         if thief_pos == exit_pos and collected_items == len(items):
-                            print(f"Run {current_run + 1}/{selected_params['num_runs']}: Tên trộm đã thoát!")
+                            print(f"Run {current_run + 1}/{selected_params['num_runs']}: Ten trom da thoat")
                             game_over = True
                     else:
                         path = None
@@ -264,7 +264,7 @@ while True:
                         master_patrol_counter = 0
 
                 if master_pos == thief_pos:
-                    print(f"Run {current_run + 1}/{selected_params['num_runs']}: Bị ông chủ bắt!")
+                    print(f"Run {current_run + 1}/{selected_params['num_runs']}: Ten trom bi bat")
                     game_over = True
 
                 # Cập nhật frame cho hoạt hình

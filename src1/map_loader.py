@@ -12,7 +12,7 @@ COLS = tmx_data.width
 MAP_WIDTH = COLS * GRID_SIZE
 MAP_HEIGHT = ROWS * GRID_SIZE
 
-# Tính hệ số phóng to
+# Tính hệ số phóng to   
 scale_factor = min(SCREEN_WIDTH / MAP_WIDTH, SCREEN_HEIGHT / MAP_HEIGHT)
 SCALED_GRID_SIZE = GRID_SIZE * scale_factor
 

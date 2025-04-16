@@ -24,8 +24,8 @@ YELLOW = (255, 255, 0)  # Viền đối tượng nội thất
 font = pygame.font.SysFont(None, 30)
 
 # Tầm nhìn
-THIEF_VISION_RANGE = 4
-MASTER_VISION_RANGE = 6
+THIEF_VISION_RANGE = 2
+MASTER_VISION_RANGE = 3
 
 # Frame rate cho hoạt hình
 FRAME_RATE = 1

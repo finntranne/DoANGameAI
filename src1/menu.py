@@ -55,25 +55,18 @@ class TextBox:
     def handle_event(self, event):
         if not self.active:
             return
-
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSPACE:
-                self.text = self.text[:-1] if self.text else "1"
+                self.text = self.text[:-1]
             elif event.key == pygame.K_RETURN:
                 self.active = False
             elif event.unicode.isdigit():
-                if self.text == "1":
-                    if event.unicode != "0":
-                        self.text = event.unicode
+                if self.text == "0":
+                    self.text = event.unicode  # thay thế nếu đang là "0"
                 else:
                     self.text += event.unicode
 
-            if not self.text:
-                self.text = "1"
-            try:
-                self.text = str(max(1, int(self.text)))
-            except ValueError:
-                self.text = "1"
+
 
 class Button:
     def __init__(self, x, y, width, height, normal_image_path, pressed_image_path, action=None, sound_path=None):
@@ -236,7 +229,7 @@ class Menu:
 
         button_ai_right_width = 40
         button_ai_right_height = 40
-        button_ai_right_x = SCREEN_WIDTH // 2 + 270
+        button_ai_right_x = SCREEN_WIDTH // 2 + 250
         button_ai_right_y = SCREEN_HEIGHT - 40
         ai_right_button = Button(
             button_ai_right_x,
@@ -334,7 +327,10 @@ class Menu:
 
         # Tính toán vị trí trung tâm giữa hai nút để đặt tên thuật toán
         ai_text = self.font.render(f"{self.selected_ai}", True, self.text_color)
-        ai_rect = ai_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 20))
+        left_button_x = SCREEN_WIDTH // 2 - 300  # Vị trí nút trái
+        right_button_x = SCREEN_WIDTH // 2 + 250  # Vị trí nút phải
+        ai_center_x = (left_button_x + right_button_x) // 2  # Tọa độ x trung tâm giữa hai nút
+        ai_rect = ai_text.get_rect(center=(ai_center_x, SCREEN_HEIGHT - 20))
         screen.blit(ai_text, ai_rect)
 
     def handle_event(self, event, screen):

@@ -8,6 +8,18 @@ from ai import create_thief_vision_zone, create_master_vision_zone, master_visio
 from utils import check_furniture_collision, find_nearest_free_position
 from menu import Menu  # Import Menu từ menu.py
 
+# Khởi tạo pygame.mixer để xử lý âm thanh
+pygame.mixer.init()
+
+# Load âm thanh
+try:
+    success_sound = pygame.mixer.Sound("assets/sounds/Success.wav")
+    game_over_sound = pygame.mixer.Sound("assets/sounds/GameOver.wav")
+except pygame.error as e:
+    print(f"Error loading sound: {e}")
+    success_sound = None
+    game_over_sound = None
+
 # Danh sách thuật toán
 AI_ALGORITHMS = {
     "Breadth-First Search": None,
@@ -53,6 +65,34 @@ thief_pos = None
 master_pos = None
 items = None
 exit_pos = None
+
+def transition_effect(screen, message, color, duration=2000):
+    overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+    overlay.fill(color)
+    overlay.set_alpha(0)
+
+    font = pygame.font.Font("assets/fonts/PressStart2P.ttf", 80)
+    text_surface = font.render(message, True, (255, 255, 255))
+    text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+
+    transition_duration = duration
+    start_time = pygame.time.get_ticks()
+
+    while True:
+        current_time = pygame.time.get_ticks()
+        elapsed_time = current_time - start_time
+
+        alpha = min(255, (elapsed_time / transition_duration) * 255)
+        overlay.set_alpha(int(alpha))
+
+        screen.blit(overlay, (0, 0))
+        screen.blit(text_surface, text_rect)
+        pygame.display.flip()
+
+        if elapsed_time >= transition_duration:
+            break
+
+        pygame.time.wait(10)
 
 # Vòng lặp chính
 clock = pygame.time.Clock()
@@ -209,6 +249,11 @@ while True:
 
                         if thief_pos == exit_pos and collected_items == len(items):
                             print(f"Run {current_run + 1}/{selected_params['num_runs']}: Ten trom da thoat")
+                            # Phát âm thanh thành công
+                            if success_sound:
+                                success_sound.play()
+                            # Hiệu ứng chuyển cảnh thành công (màu xanh lá)
+                            transition_effect(screen, "Success!", (0, 255, 0))
                             game_over = True
                     else:
                         path = None
@@ -265,6 +310,11 @@ while True:
 
                 if master_pos == thief_pos:
                     print(f"Run {current_run + 1}/{selected_params['num_runs']}: Ten trom bi bat")
+                    # Phát âm thanh game over
+                    if game_over_sound:
+                        game_over_sound.play()
+                    # Hiệu ứng chuyển cảnh bị bắt (màu đỏ)
+                    transition_effect(screen, "Game Over!", (255, 0, 0))
                     game_over = True
 
                 # Cập nhật frame cho hoạt hình

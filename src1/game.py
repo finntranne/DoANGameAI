@@ -22,18 +22,18 @@ except pygame.error as e:
 
 # Danh sách thuật toán
 AI_ALGORITHMS = {
-    "Breadth-First Search": None,
-    "Depth-First Search": None,
-    "Uniform Cost Search": None,
-    "Iterative Deepening DFS": None,
-    "Greedy Best-First Search": None,
+    "Breadth-First Search": bfs,
+    "Depth-First Search": dfs,
+    "Uniform Cost Search": uniform_cost_search,
+    "Iterative Deepening DFS": iddfs,
+    "Greedy Best-First Search": greedy_best_first_search,
     "A* Search": a_star,
-    "IDA* Search": None,
-    "Simple Hill Climbing": None,
-    "Steepest Hill Climbing": None,
-    "Stochastic Hill Climbing": None,
-    "Simulated Annealing": None,
-    "Beam Search": None
+    "IDA* Search": ida_star,
+    "Simple Hill Climbing": simple_hill_climbing,
+    "Steepest Hill Climbing": steepest_hill_climbing,
+    "Stochastic Hill Climbing": stochastic_hill_climbing,
+    "Simulated Annealing": simulated_annealing,
+    "Beam Search": beam_search
 }
 
 # Danh sách bản đồ

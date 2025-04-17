@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="48" height="32" tilewidth="8" tileheight="8" infinite="0" nextlayerid="6" nextobjectid="224">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="48" height="32" tilewidth="8" tileheight="8" infinite="0" nextlayerid="7" nextobjectid="232">
  <tileset firstgid="1" source="../assets/images/furniture.tsx"/>
  <tileset firstgid="659" source="../../test/furniture.tsx"/>
  <layer id="1" name="Floor" width="48" height="32">
@@ -83,6 +83,9 @@
   </object>
   <object id="215" name="item" type="item" x="349.345" y="226.036" width="8.25" height="8.125"/>
   <object id="216" name="item" type="item" x="26.072" y="225.474" width="8.25" height="8.125"/>
+  <object id="227" name="trap" type="spike" x="88.125" y="223.875" width="7.8125" height="8.25"/>
+  <object id="229" name="trap" type="fire" x="152" y="224.364" width="8" height="7.9375"/>
+  <object id="231" x="75.6667" y="142.333"/>
  </objectgroup>
  <objectgroup id="3" name="FurnitureObjects">
   <object id="27" gid="603" x="112.188" y="37.4034" width="8.375" height="15.125"/>

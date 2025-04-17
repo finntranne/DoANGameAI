@@ -1,10 +1,7 @@
-# File: menu.py
 import pygame
 import time
+from config import *
 
-# Cấu hình cơ bản
-SCREEN_WIDTH = 1200
-SCREEN_HEIGHT = 780  # Đồng bộ với game.py
 
 # Khởi tạo pygame.mixer để xử lý âm thanh
 pygame.mixer.init()
@@ -65,8 +62,6 @@ class TextBox:
                     self.text = event.unicode  # thay thế nếu đang là "0"
                 else:
                     self.text += event.unicode
-
-
 
 class Button:
     def __init__(self, x, y, width, height, normal_image_path, pressed_image_path, action=None, sound_path=None):

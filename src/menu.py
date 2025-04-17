@@ -2,7 +2,6 @@ import pygame
 import time
 from config import *
 
-
 # Khởi tạo pygame.mixer để xử lý âm thanh
 pygame.mixer.init()
 
@@ -59,7 +58,7 @@ class TextBox:
                 self.active = False
             elif event.unicode.isdigit():
                 if self.text == "0":
-                    self.text = event.unicode  # thay thế nếu đang là "0"
+                    self.text = event.unicode
                 else:
                     self.text += event.unicode
 
@@ -74,6 +73,7 @@ class Button:
         self.hovered = False
         self.action = action
         self.sound = pygame.mixer.Sound(sound_path) if sound_path else None
+        self.sound_enabled = True
 
     def draw(self, screen):
         scale = 1.1 if self.hovered else 1.0
@@ -93,7 +93,7 @@ class Button:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.check_click(event.pos):
                 self.is_pressed = True
-                if self.sound:
+                if self.sound and self.sound_enabled:
                     self.sound.play()
                 return self.action
         elif event.type == pygame.MOUSEBUTTONUP:
@@ -205,7 +205,6 @@ class Menu:
         )
         self.buttons.append(arrow_right_button)
 
-        # Thêm nút mũi tên để chọn thuật toán (AI)
         button_ai_left_width = 40
         button_ai_left_height = 40
         button_ai_left_x = SCREEN_WIDTH // 2 - 320
@@ -317,14 +316,13 @@ class Menu:
 
         difficulty = self.get_difficulty()
         difficulty_label = self.font.render(f"Difficulty: {difficulty}", True, self.text_color)
-        difficulty_label_rect = difficulty_label.get_rect(center=(SCREEN_WIDTH // 2 + 300, 440))
+        difficulty_label_rect = difficulty_label.get_rect(center=(SCREEN_WIDTH // 2 + 300, 450))
         screen.blit(difficulty_label, difficulty_label_rect)
 
-        # Tính toán vị trí trung tâm giữa hai nút để đặt tên thuật toán
         ai_text = self.font.render(f"{self.selected_ai}", True, self.text_color)
-        left_button_x = SCREEN_WIDTH // 2 - 300  # Vị trí nút trái
-        right_button_x = SCREEN_WIDTH // 2 + 250  # Vị trí nút phải
-        ai_center_x = (left_button_x + right_button_x) // 2  # Tọa độ x trung tâm giữa hai nút
+        left_button_x = SCREEN_WIDTH // 2 - 300
+        right_button_x = SCREEN_WIDTH // 2 + 250
+        ai_center_x = (left_button_x + right_button_x) // 2
         ai_rect = ai_text.get_rect(center=(ai_center_x, SCREEN_HEIGHT - 20))
         screen.blit(ai_text, ai_rect)
 
@@ -352,7 +350,6 @@ class Menu:
                     self.transitioning = True
                     self.transition_to_game(screen)
                     self.transitioning = False
-                    # Trả về thông số: thuật toán, số lần thực hiện, và bản đồ
                     return {
                         "algorithm": self.selected_ai,
                         "num_runs": self.num_runs,
@@ -372,4 +369,104 @@ class Menu:
                 self.change_map("left")
             elif event.key == pygame.K_RIGHT:
                 self.change_map("right")
+        return None
+
+class OptionMenu:
+    def __init__(self, sound_enabled=True):
+        self.buttons = []
+        self.sound_enabled = sound_enabled
+        self.font = pygame.font.Font("assets/fonts/PressStart2P.ttf", 80)
+        self.text_color = (255, 255, 255)
+        self.was_opened_by_quit = False
+        self.setup_elements()
+
+        # Tạo nền mờ cho menu tạm dừng
+        self.overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.overlay.fill((0, 0, 0))
+        self.overlay.set_alpha(200)
+
+    def setup_elements(self):
+        button_width = 150
+        button_height = 150
+        button_spacing = 300
+        start_y = (SCREEN_HEIGHT - (button_height * 3 + button_spacing * 2)) // 2
+
+        # Nút Home (quay lại menu chính)
+        home_button = Button(
+            (SCREEN_WIDTH - button_width) // 2 - button_spacing,
+            start_y + button_height + button_spacing,
+            button_width,
+            button_height,
+            "assets/images/HomeBtn.png",
+            "assets/images/HomeClick.png",
+            action="home",
+            sound_path="assets/sounds/Menu1.wav"
+        )
+        self.buttons.append(home_button)
+
+        # Nút Sound On/Off (bật/tắt âm thanh)
+        sound_button = Button(
+            (SCREEN_WIDTH - button_width) // 2 + button_spacing,
+            start_y + button_height + button_spacing,
+            button_width,
+            button_height,
+            "assets/images/SoundOnBtn.png" if self.sound_enabled else "assets/images/SoundOffBtn.png",
+            "assets/images/SoundOnClick.png" if self.sound_enabled else "assets/images/SoundOffClick.png",
+            action="toggle_sound",
+            sound_path="assets/sounds/Menu1.wav"
+        )
+        self.buttons.append(sound_button)
+
+        # Nút Repeat (tiếp tục chơi)
+        repeat_button = Button(
+            (SCREEN_WIDTH - button_width) // 2,
+            start_y + button_height + button_spacing,
+            button_width,
+            button_height,
+            "assets/images/RepeatBtn.png",
+            "assets/images/RepeatClick.png",
+            action="repeat",
+            sound_path="assets/sounds/Menu1.wav"
+        )
+        self.buttons.append(repeat_button)
+
+    def update_sound_button(self):
+        sound_button = self.buttons[1]
+        sound_button.normal_image = pygame.image.load(
+            "assets/images/SoundOnBtn.png" if self.sound_enabled else "assets/images/SoundOffBtn.png"
+        )
+        sound_button.pressed_image = pygame.image.load(
+            "assets/images/SoundOnClick.png" if self.sound_enabled else "assets/images/SoundOffClick.png"
+        )
+        sound_button.normal_image = pygame.transform.scale(sound_button.normal_image, (300, 100))
+        sound_button.pressed_image = pygame.transform.scale(sound_button.pressed_image, (300, 100))
+
+        for button in self.buttons:
+            button.sound_enabled = self.sound_enabled
+
+    def draw(self, screen):
+        screen.blit(self.overlay, (0, 0))
+        title = self.font.render("Options", True, self.text_color)
+        title_rect = title.get_rect(center=(SCREEN_WIDTH // 2, 150))
+        screen.blit(title, title_rect)
+
+        mouse_pos = pygame.mouse.get_pos()
+        for button in self.buttons:
+            button.check_hover(mouse_pos)
+            button.draw(screen)
+
+    def handle_event(self, event):
+        for button in self.buttons:
+            result = button.handle_event(event)
+            if result:
+                if result == "home":
+                    # Luôn trả về "home" để quay lại menu chính, dù mở từ Quit hay ESC
+                    return "home"
+                elif result == "toggle_sound":
+                    self.sound_enabled = not self.sound_enabled
+                    self.update_sound_button()
+                    return "toggle_sound"
+                elif result == "repeat":
+                    self.was_opened_by_quit = False
+                    return "repeat"
         return None

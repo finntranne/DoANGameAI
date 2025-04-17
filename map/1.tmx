@@ -81,8 +81,8 @@
   <object id="214" name="exit" type="exit" x="33.0625" y="13.9334">
    <point/>
   </object>
-  <object id="215" name="item" type="item" x="349.345" y="226.036" width="8.25" height="8.125"/>
-  <object id="216" name="item" type="item" x="26.072" y="225.474" width="8.25" height="8.125"/>
+  <object id="215" name="item" type="item" x="343.783" y="223.724" width="8.25" height="8.125"/>
+  <object id="216" name="item" type="item" x="23.947" y="223.911" width="8.25" height="8.125"/>
   <object id="227" name="trap" type="spike" x="88.125" y="223.875" width="7.8125" height="8.25"/>
   <object id="229" name="trap" type="fire" x="152" y="224.364" width="8" height="7.9375"/>
   <object id="231" x="75.6667" y="142.333"/>

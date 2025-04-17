@@ -69,8 +69,6 @@ def load_positions(tmx_data):
     traps = []
     exit_pos = None
     for obj in tmx_data.objects:
-        # Debug: In tất cả thuộc tính của đối tượng
-        print(f"Object: name={obj.name}, properties={getattr(obj, 'properties', {})}")
         # Thử truy xuất class theo nhiều cách
         trap_type = None
         # Cách 1: Truy xuất trực tiếp thuộc tính 'class'
@@ -89,7 +87,6 @@ def load_positions(tmx_data):
         elif obj.name == "item":
             items.append([int(obj.y // tmx_data.tilewidth), int(obj.x // tmx_data.tilewidth)])
         elif obj.name == "trap":
-            print(f"Trap detected: trap_type={trap_type}")  # Debug
             if trap_type in ["spike", "fire"]:
                 traps.append({
                     "pos": [int(obj.y // tmx_data.tilewidth), int(obj.x // tmx_data.tilewidth)],

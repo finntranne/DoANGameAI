@@ -7,7 +7,7 @@ from characters import *
 from ai import *
 from utils import *
 from menu import Menu, OptionMenu
-            
+
 # Khởi tạo pygame.mixer để xử lý âm thanh
 pygame.mixer.init()
 
@@ -225,6 +225,9 @@ while True:
                         coin_sprites = load_coin_sprites(SCALED_GRID_SIZE)
                         trap_sprites, TRAP_SIZE = load_trap_sprites(SCALED_GRID_SIZE)
                         thief_pos, master_pos, items, traps, exit_pos = load_positions(tmx_data)
+                        # Add triggered flag to each trap
+                        for trap in traps:
+                            trap["triggered"] = False
                         print(f"Loaded traps: {traps}")
                         if not traps:
                             print("Warning: No traps found in the map!")
@@ -324,6 +327,9 @@ while True:
                 current_run += 1
                 if current_run < selected_params["num_runs"]:
                     thief_pos, master_pos, items, traps, exit_pos = load_positions(tmx_data)
+                    # Reset triggered flag for all traps
+                    for trap in traps:
+                        trap["triggered"] = False
                     print(f"Reloaded traps for run {current_run + 1}: {traps}")
                     if not traps:
                         print("Warning: No traps found in the map during reset!")
@@ -420,32 +426,32 @@ while True:
                         path = None
 
                 trap_type = check_trap_collision(thief_pos, THIEF_SIZE, traps, SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y)
-            
                 if trap_type:
-                    print(f"Run {current_run + 1}/{selected_params['num_runs']}: Ten trom bi bat boi {trap_type} trap")
-                    blood = blood - 5 
-                    if sound_enabled:
-                        if current_music:
-                            current_music.stop()
-                        if hurt_sound:
-                            hurt_sound.play()
-                    
-                    print("dap bay tai",thief_pos)
-                    if blood <= 0:  # Kiểm tra nếu máu <= 0
+                    for trap in traps:
+                        if trap["pos"] == thief_pos and not trap["triggered"]:
+                            trap["triggered"] = True
+                            print(f"Run {current_run + 1}/{selected_params['num_runs']}: Ten trom bi bat boi {trap_type} trap")
+                            blood -= 5
+                            if sound_enabled:
+                                if current_music:
+                                    current_music.stop()
+                                if hurt_sound:
+                                    hurt_sound.play()
+                            print(f"Trap triggered at {thief_pos}, Blood remaining: {blood}")
+                            break
+                    if blood <= 0:
                         print(f"Run {current_run + 1}/{selected_params['num_runs']}: Thief has no blood left! Game Over!")
                         if sound_enabled and game_over_sound:
                             game_over_sound.play()
                         transition_effect(screen, "Game Over!", (255, 0, 0))
                         game_over = True
-                        current_run = selected_params["num_runs"]  # Kết thúc tất cả lượt chạy
+                        current_run = selected_params["num_runs"]
                         state = "menu"
                         menu_state = "main"
                         if current_music:
                             current_music.stop()
                         play_menu_music()
                         continue
-                    else:
-                        print(f"Blood remaining: {blood}")  # Debug: Hiển thị máu còn lại
 
                 new_detected_state = master_vision(master_pos, thief_pos, ROWS, COLS)
                 if new_detected_state != is_thief_detected:
@@ -538,7 +544,6 @@ while True:
             trap_img = trap_sprites[trap["type"]][trap_frame]
             draw_x = trap["pos"][1] * SCALED_GRID_SIZE + OFFSET_X
             draw_y = trap["pos"][0] * SCALED_GRID_SIZE + OFFSET_Y
-            print(f"Drawing trap {trap['type']} at ({draw_x}, {draw_y})")
             screen.blit(trap_img, (int(draw_x), int(draw_y)))
 
         # Vẽ thanh máu trên đầu trộm

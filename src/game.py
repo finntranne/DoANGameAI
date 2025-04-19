@@ -78,6 +78,7 @@ current_music = None
 menu_music_playing = False
 last_detected_state = False
 
+
 # Biến trò chơi
 tmx_data = None
 map_grid = None
@@ -99,6 +100,7 @@ MASTER_SIZE = None
 TRAP_SIZE = None
 is_master_resting = False
 rest_timer = 0
+
 
 # Biến thống kê
 success_count = 0
@@ -178,6 +180,7 @@ def stop_menu_music():
 clock = pygame.time.Clock()
 play_menu_music()
 while True:
+    print("blood:", blood)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             if state == "game":
@@ -212,6 +215,7 @@ while True:
                         state = "game"
                         menu_state = "main"
                         current_run = 0
+                        blood = 100
                         success_count = 0
                         failure_count = 0
                         total_path_length = 0
@@ -239,6 +243,10 @@ while True:
                         coin_sprites = load_coin_sprites(SCALED_GRID_SIZE)
                         trap_sprites, TRAP_SIZE = load_trap_sprites(SCALED_GRID_SIZE)
                         thief_pos, master_pos, items, traps, exit_pos = load_positions(tmx_data)
+                         # Add triggered flag to each trap
+                        for trap in traps:
+                            trap["triggered"] = False
+                        print(f"Loaded traps: {traps}")
                         if not traps:
                             print("Warning: No traps found in the map!")
                         if thief_pos is None:
@@ -341,6 +349,10 @@ while True:
                 current_run += 1
                 if current_run < selected_params["num_runs"]:
                     thief_pos, master_pos, items, traps, exit_pos = load_positions(tmx_data)
+                    # Reset triggered flag for all traps
+                    for trap in traps:
+                        trap["triggered"] = False
+                    print(f"Reloaded traps for run {current_run + 1}: {traps}")
                     if not traps:
                         print("Warning: No traps found in the map during reset!")
                     if thief_pos is None:
@@ -495,26 +507,41 @@ while True:
                         path = None
 
                 # Kiểm tra va chạm với trap
+                
                 trap_type = check_trap_collision(thief_pos, THIEF_SIZE, traps, SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y)
                 if trap_type:
-                    print(f"Run {current_run + 1}/{selected_params['num_runs']}: Ten trom bi bat boi {trap_type} trap")
-                    failure_count += 1
-                    completion_time = time.time() - run_start_time
-                    total_completion_time += completion_time
-                    total_path_length += path_length
-                    run_stats.append([
-                        current_run + 1, selected_params["algorithm"], selected_params["map"],
-                        0, path_length, completion_time, expanded_nodes, execution_time
-                    ])
-                    if sound_enabled:
+                    for trap in traps:
+                        if trap["pos"] == thief_pos and not trap["triggered"]:
+                            trap["triggered"] = True
+                            print(f"Run {current_run + 1}/{selected_params['num_runs']}: Ten trom bi bat boi {trap_type} trap")
+                            blood -= 5
+                            print("dap bay")
+                            if sound_enabled:
+                                if current_music:
+                                    current_music.stop()
+                                if hurt_sound:
+                                    hurt_sound.play()
+                            print(f"Trap triggered at {thief_pos}, Blood remaining: {blood}")
+                            break
+                    if blood <= 0:
+                        print(f"Run {current_run + 1}/{selected_params['num_runs']}: Thief has no blood left! Game Over!")
+                        if sound_enabled and game_over_sound:
+                            game_over_sound.play()
+                        transition_effect(screen, "Game Over!", (255, 0, 0))
+                        game_over = True
+                        current_run = selected_params["num_runs"]
+                        state = "menu"
+                        menu_state = "main"
                         if current_music:
                             current_music.stop()
-                        if hurt_sound:
-                            hurt_sound.play()
-                        if game_over_sound:
-                            game_over_sound.play()
-                    transition_effect(screen, "Game Over!", (255, 0, 0))
-                    game_over = True
+                        play_menu_music()
+                        continue
+
+                new_detected_state = master_vision(master_pos, thief_pos, ROWS, COLS)
+                if new_detected_state != is_thief_detected:
+                    is_thief_detected = new_detected_state
+                    if not game_over:
+                        play_background_music()
 
                 # Logic di chuyển của master
                 if is_thief_detected:
@@ -625,6 +652,16 @@ while True:
             draw_x = trap["pos"][1] * SCALED_GRID_SIZE + OFFSET_X
             draw_y = trap["pos"][0] * SCALED_GRID_SIZE + OFFSET_Y
             screen.blit(trap_img, (int(draw_x), int(draw_y)))
+           # Vẽ thanh máu trên đầu trộm
+        bar_width = THIEF_SIZE  # Chiều rộng thanh máu bằng kích thước trộm
+        bar_height = 5  # Chiều cao thanh máu
+        bar_x = thief_pos[1] * SCALED_GRID_SIZE + OFFSET_X + (THIEF_SIZE - bar_width) / 2  # Căn giữa theo x
+        bar_y = thief_pos[0] * SCALED_GRID_SIZE + OFFSET_Y - bar_height - 5  # Cách đầu trộm 5 pixel
+        # Vẽ nền thanh máu (màu xám)
+        pygame.draw.rect(screen, (255, 0, 0), (bar_x, bar_y, bar_width, bar_height))
+        # Vẽ phần máu còn lại (màu xanh lá)
+        filled_width = (blood / MAX_BLOOD) * bar_width
+        pygame.draw.rect(screen, (0, 255, 0), (bar_x, bar_y, filled_width, bar_height))
 
         thief_img = thief_sprites[thief_direction][thief_frame]
         screen.blit(thief_img, (thief_pos[1] * SCALED_GRID_SIZE + OFFSET_X, thief_pos[0] * SCALED_GRID_SIZE + OFFSET_Y))

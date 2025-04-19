@@ -101,6 +101,8 @@ trap_sprites = None
 THIEF_SIZE = None
 MASTER_SIZE = None
 TRAP_SIZE = None
+blood = 100  # Máu ban đầu của trộm
+MAX_BLOOD = 100  # Máu tối đa để tính tỷ lệ thanh máu
 
 def transition_effect(screen, message, color, duration=2000):
     overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -163,6 +165,9 @@ def stop_menu_music():
 clock = pygame.time.Clock()
 play_menu_music()  # Phát Menu.mp3 ngay khi bắt đầu (ở menu chính)
 while True:
+    print(f"Blood remaining: {blood}")
+    print(f"Blood Max: {MAX_BLOOD}")
+    print("thief_pos:", thief_pos)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             if state == "game":
@@ -194,9 +199,13 @@ while True:
                     if result:
                         stop_menu_music()  # Dừng Menu.mp3 khi chuyển sang game
                         selected_params = result
+                        if selected_params["num_runs"] <= 0:
+                            print("Error: Number of runs must be positive!")
+                            selected_params["num_runs"] = 1  # Mặc định là 1 lần chạy
                         state = "game"
                         menu_state = "main"
                         current_run = 0
+                        blood = 100  # Đặt lại máu cho trò chơi mới
                         map_file = MAPS[selected_params["map"]]
                         map_data = load_map(map_file)
                         tmx_data = map_data["tmx_data"]
@@ -219,6 +228,7 @@ while True:
                         print(f"Loaded traps: {traps}")
                         if not traps:
                             print("Warning: No traps found in the map!")
+                            traps = []  # Đảm bảo traps là danh sách để tránh lỗi NoneType
                         if thief_pos is None:
                             print("Warning: Thief position not found in the map! Using default position.")
                             thief_pos = [1, 1]
@@ -317,6 +327,7 @@ while True:
                     print(f"Reloaded traps for run {current_run + 1}: {traps}")
                     if not traps:
                         print("Warning: No traps found in the map during reset!")
+                        traps = []  # Đảm bảo traps là danh sách để tránh lỗi NoneType
                     if thief_pos is None:
                         thief_pos = [1, 1]
                     else:
@@ -409,17 +420,32 @@ while True:
                         path = None
 
                 trap_type = check_trap_collision(thief_pos, THIEF_SIZE, traps, SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y)
+            
                 if trap_type:
                     print(f"Run {current_run + 1}/{selected_params['num_runs']}: Ten trom bi bat boi {trap_type} trap")
+                    blood = blood - 5 
                     if sound_enabled:
                         if current_music:
                             current_music.stop()
                         if hurt_sound:
                             hurt_sound.play()
-                        if game_over_sound:
+                    
+                    print("dap bay tai",thief_pos)
+                    if blood <= 0:  # Kiểm tra nếu máu <= 0
+                        print(f"Run {current_run + 1}/{selected_params['num_runs']}: Thief has no blood left! Game Over!")
+                        if sound_enabled and game_over_sound:
                             game_over_sound.play()
-                    transition_effect(screen, "Game Over!", (255, 0, 0))
-                    game_over = True
+                        transition_effect(screen, "Game Over!", (255, 0, 0))
+                        game_over = True
+                        current_run = selected_params["num_runs"]  # Kết thúc tất cả lượt chạy
+                        state = "menu"
+                        menu_state = "main"
+                        if current_music:
+                            current_music.stop()
+                        play_menu_music()
+                        continue
+                    else:
+                        print(f"Blood remaining: {blood}")  # Debug: Hiển thị máu còn lại
 
                 new_detected_state = master_vision(master_pos, thief_pos, ROWS, COLS)
                 if new_detected_state != is_thief_detected:
@@ -514,6 +540,17 @@ while True:
             draw_y = trap["pos"][0] * SCALED_GRID_SIZE + OFFSET_Y
             print(f"Drawing trap {trap['type']} at ({draw_x}, {draw_y})")
             screen.blit(trap_img, (int(draw_x), int(draw_y)))
+
+        # Vẽ thanh máu trên đầu trộm
+        bar_width = THIEF_SIZE  # Chiều rộng thanh máu bằng kích thước trộm
+        bar_height = 5  # Chiều cao thanh máu
+        bar_x = thief_pos[1] * SCALED_GRID_SIZE + OFFSET_X + (THIEF_SIZE - bar_width) / 2  # Căn giữa theo x
+        bar_y = thief_pos[0] * SCALED_GRID_SIZE + OFFSET_Y - bar_height - 5  # Cách đầu trộm 5 pixel
+        # Vẽ nền thanh máu (màu xám)
+        pygame.draw.rect(screen, (255, 0, 0), (bar_x, bar_y, bar_width, bar_height))
+        # Vẽ phần máu còn lại (màu xanh lá)
+        filled_width = (blood / MAX_BLOOD) * bar_width
+        pygame.draw.rect(screen, (0, 255, 0), (bar_x, bar_y, filled_width, bar_height))
 
         thief_img = thief_sprites[thief_direction][thief_frame]
         screen.blit(thief_img, (thief_pos[1] * SCALED_GRID_SIZE + OFFSET_X, thief_pos[0] * SCALED_GRID_SIZE + OFFSET_Y))

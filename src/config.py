@@ -24,8 +24,53 @@ YELLOW = (255, 255, 0)
 font = pygame.font.SysFont(None, 30)
 
 # Tầm nhìn
-THIEF_VISION_RANGE = 2
+THIEF_VISION_RANGE = 3
 MASTER_VISION_RANGE = 3
 
 # Frame rate cho hoạt hình
 FRAME_RATE = 1
+
+# Thời gian nghỉ của master
+REST_DURATION = 2  # Thời gian nghỉ 1 giây
+
+# Đường dẫn file âm thanh
+SOUND_FILES = {
+    "success": "assets/sounds/Success.wav",
+    "game_over": "assets/sounds/GameOver.wav",
+    "gold": "assets/sounds/Gold.wav",
+    "hurt": "assets/sounds/Hurt.mp3",
+    "fun_music": "assets/sounds/Fun.mp3",
+    "dramatic_music": "assets/sounds/Dramatic.mp3",
+    "menu_music": "assets/sounds/Menu.mp3",
+    "alert": "assets/sounds/Alert.wav",
+    "escaped": "assets/sounds/Escaped.wav",
+}
+
+# Danh sách thuật toán AI
+AI_ALGORITHMS = {
+    "Breadth-First Search": "bfs",
+    "Depth-First Search": "dfs",
+    "Uniform Cost Search": "uniform_cost_search",
+    "Iterative Deepening DFS": "iddfs",
+    "Greedy Best-First Search": "greedy_best_first_search",
+    "A* Search": "a_star",
+    "IDA* Search": "ida_star",
+    "Simple Hill Climbing": "simple_hill_climbing",
+    "Steepest Hill Climbing": "steepest_hill_climbing",
+    "Stochastic Hill Climbing": "stochastic_hill_climbing",
+    "Simulated Annealing": "simulated_annealing",
+    "Beam Search": "beam_search"
+}
+
+# Danh sách bản đồ
+MAPS = {
+    "Map 1": "map/1.tmx",
+    "Map 2": "map/2.tmx",
+    "Map 3": "map/3.tmx",
+    "Map 4": "map/4.tmx",
+    "Map 5": "map/5.tmx",
+    "Map 6": "map/6.tmx",
+    "Map 7": "map/7.tmx",
+    "Map 8": "map/8.tmx",
+    "Map 9": "map/9.tmx"
+}

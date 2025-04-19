@@ -1,5 +1,4 @@
 import pygame
-import time
 from config import *
 
 # Khởi tạo pygame.mixer để xử lý âm thanh
@@ -89,11 +88,11 @@ class Button:
     def check_click(self, mouse_pos):
         return self.rect.collidepoint(mouse_pos)
 
-    def handle_event(self, event):
+    def handle_event(self, event, sound_enabled=True):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.check_click(event.pos):
                 self.is_pressed = True
-                if self.sound and self.sound_enabled:
+                if self.sound and self.sound_enabled and sound_enabled:
                     self.sound.play()
                 return self.action
         elif event.type == pygame.MOUSEBUTTONUP:
@@ -326,7 +325,7 @@ class Menu:
         ai_rect = ai_text.get_rect(center=(ai_center_x, SCREEN_HEIGHT - 20))
         screen.blit(ai_text, ai_rect)
 
-    def handle_event(self, event, screen):
+    def handle_event(self, event, screen, sound_enabled=True):
         if self.transitioning:
             return None
 
@@ -340,7 +339,7 @@ class Menu:
                 element.handle_event(event)
 
         for button in self.buttons:
-            result = button.handle_event(event)
+            result = button.handle_event(event, sound_enabled)
             if result:
                 if result == "play":
                     try:
@@ -438,8 +437,8 @@ class OptionMenu:
         sound_button.pressed_image = pygame.image.load(
             "assets/images/SoundOnClick.png" if self.sound_enabled else "assets/images/SoundOffClick.png"
         )
-        sound_button.normal_image = pygame.transform.scale(sound_button.normal_image, (300, 100))
-        sound_button.pressed_image = pygame.transform.scale(sound_button.pressed_image, (300, 100))
+        sound_button.normal_image = pygame.transform.scale(sound_button.normal_image, (150, 150))
+        sound_button.pressed_image = pygame.transform.scale(sound_button.pressed_image, (150, 150))
 
         for button in self.buttons:
             button.sound_enabled = self.sound_enabled
@@ -455,9 +454,9 @@ class OptionMenu:
             button.check_hover(mouse_pos)
             button.draw(screen)
 
-    def handle_event(self, event):
+    def handle_event(self, event, sound_enabled=True):
         for button in self.buttons:
-            result = button.handle_event(event)
+            result = button.handle_event(event, sound_enabled)
             if result:
                 if result == "home":
                     # Luôn trả về "home" để quay lại menu chính, dù mở từ Quit hay ESC

@@ -40,7 +40,7 @@ def load_thief_sprites(scaled_grid_size):
 def load_master_sprites(scaled_grid_size):
     # Load sprite sheet cho master
     try:
-        master_sprite_sheet = pygame.image.load("assets/images/Master.png")
+        master_sprite_sheet = pygame.image.load("assets/images/MasterWalk.png")
     except pygame.error as e:
         print(f"Error loading master sprite sheet: {e}")
         master_sprite_sheet = pygame.Surface((scaled_grid_size * 4, scaled_grid_size * 4))
@@ -72,6 +72,42 @@ def load_master_sprites(scaled_grid_size):
                 master_sprites["right"].append(sprite_image)
 
     return master_sprites, MASTER_SIZE
+
+def load_master_idle_sprites(scaled_grid_size):
+    # Load sprite sheet cho master idle
+    try:
+        master_idle_sprite_sheet = pygame.image.load("assets/images/MasterIdle.png")
+    except pygame.error as e:
+        print(f"Error loading master idle sprite sheet: {e}")
+        master_idle_sprite_sheet = pygame.Surface((scaled_grid_size * 4, scaled_grid_size))
+        master_idle_sprite_sheet.fill(BLUE)
+
+    # Cắt sprite sheet (1 hàng, 4 cột)
+    SPRITE_ROWS = 1
+    SPRITE_COLS = 4
+    sprite_width = master_idle_sprite_sheet.get_width() // SPRITE_COLS
+    sprite_height = master_idle_sprite_sheet.get_height() // SPRITE_ROWS
+
+    MASTER_SCALE_FACTOR = 1.5
+    MASTER_SIZE = int(scaled_grid_size * MASTER_SCALE_FACTOR)
+
+    # Cắt sprite sheet cho master idle
+    master_idle_sprites = {"down": [], "up": [], "left": [], "right": []}
+    for row in range(SPRITE_ROWS):
+        for col in range(SPRITE_COLS):
+            sprite_rect = pygame.Rect(col * sprite_width, row * sprite_height, sprite_width, sprite_height)
+            sprite_image = master_idle_sprite_sheet.subsurface(sprite_rect)
+            sprite_image = pygame.transform.scale(sprite_image, (MASTER_SIZE, MASTER_SIZE))
+            if col == 0:
+                master_idle_sprites["down"].append(sprite_image)
+            elif col == 1:
+                master_idle_sprites["up"].append(sprite_image)
+            elif col == 2:
+                master_idle_sprites["left"].append(sprite_image)
+            elif col == 3:
+                master_idle_sprites["right"].append(sprite_image)
+
+    return master_idle_sprites
 
 def load_coin_sprites(scaled_grid_size):
     COIN_SIZE = 16

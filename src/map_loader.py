@@ -96,7 +96,6 @@ def load_positions(tmx_data):
                 print(f"Invalid trap type for object: {trap_type}")
         elif obj.name == "exit":
             exit_pos = [int(obj.y // tmx_data.tilewidth), int(obj.x // tmx_data.tilewidth)]
-    print(f"Final traps list: {traps}")
     return thief_pos, master_pos, items, traps, exit_pos
 
 def check_trap_collision(pos, size, traps, scaled_grid_size, offset_x, offset_y):

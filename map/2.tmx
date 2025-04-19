@@ -75,7 +75,7 @@
  </layer>
  <objectgroup id="4" name="Objects">
   <object id="211" name="item" type="item" x="223.268" y="104" width="8.25" height="8.125"/>
-  <object id="212" name="master" type="master" x="299.308" y="226.256" width="3.6875" height="3.5625"/>
+  <object id="212" name="master" type="master" x="42.308" y="225.589" width="3.6875" height="3.5625"/>
   <object id="213" name="thief" type="thief" x="157.957" y="33.6873" width="3" height="2.875"/>
   <object id="214" name="exit" type="exit" x="160" y="17.7771">
    <point/>

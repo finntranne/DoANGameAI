@@ -13,7 +13,8 @@ pygame.display.set_caption("Thief's Escape with Vision Zones")
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
-GREEN = (0, 255, 0)
+GREEN = (0, 255, 0)  # Dùng cho thanh máu
+CYAN = (0, 255, 255)  # Dùng cho thanh thể lực
 BLUE = (0, 0, 255)
 GRAY = (128, 128, 128)
 LIGHT_BLUE = (135, 206, 250)
@@ -32,6 +33,12 @@ FRAME_RATE = 1
 
 # Thời gian nghỉ của master
 REST_DURATION = 2  # Thời gian nghỉ 1 giây
+
+# Cài đặt máu và thể lực
+THIEF_MAX_HEALTH = 100
+THIEF_TRAP_DAMAGE = 5
+MASTER_MAX_STAMINA = 100
+MASTER_STAMINA_DRAIN_RATE = 20  # Thể lực giảm mỗi giây khi đuổi
 
 # Đường dẫn file âm thanh
 SOUND_FILES = {

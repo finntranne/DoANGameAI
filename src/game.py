@@ -239,7 +239,6 @@ while True:
                         coin_sprites = load_coin_sprites(SCALED_GRID_SIZE)
                         trap_sprites, TRAP_SIZE = load_trap_sprites(SCALED_GRID_SIZE)
                         thief_pos, master_pos, items, traps, exit_pos = load_positions(tmx_data)
-                        print(f"Loaded traps: {traps}")
                         if not traps:
                             print("Warning: No traps found in the map!")
                         if thief_pos is None:
@@ -342,7 +341,6 @@ while True:
                 current_run += 1
                 if current_run < selected_params["num_runs"]:
                     thief_pos, master_pos, items, traps, exit_pos = load_positions(tmx_data)
-                    print(f"Reloaded traps for run {current_run + 1}: {traps}")
                     if not traps:
                         print("Warning: No traps found in the map during reset!")
                     if thief_pos is None:
@@ -626,7 +624,6 @@ while True:
             trap_img = trap_sprites[trap["type"]][trap_frame]
             draw_x = trap["pos"][1] * SCALED_GRID_SIZE + OFFSET_X
             draw_y = trap["pos"][0] * SCALED_GRID_SIZE + OFFSET_Y
-            print(f"Drawing trap {trap['type']} at ({draw_x}, {draw_y})")
             screen.blit(trap_img, (int(draw_x), int(draw_y)))
 
         thief_img = thief_sprites[thief_direction][thief_frame]

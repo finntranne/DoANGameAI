@@ -13,7 +13,7 @@ from menu import Menu, OptionMenu
 
 # Khởi tạo pygame.mixer để xử lý âm thanh
 pygame.mixer.init()
-
+    
 # Load âm thanh hiệu ứng
 try:
     success_sound = pygame.mixer.Sound(SOUND_FILES["success"])

@@ -163,3 +163,9 @@ Run,Algorithm,Map,Success,Path_Length,Completion_Time,Expanded_Nodes,Execution_T
 1,Breadth-First Search,Map 9,1,51,4.932439804077148,8,0.0
 1,Breadth-First Search,Map 6,1,17,1.5151522159576416,7,0.0
 1,Breadth-First Search,Map 6,1,185,18.405848741531372,7,0.0
+1,Breadth-First Search,Map 3,1,110,10.89449691772461,7,0.00046563148498535156
+1,Breadth-First Search,Map 3,1,166,16.506450414657593,7,0.0
+1,Breadth-First Search,Map 3,1,86,8.47153925895691,7,0.0
+1,Breadth-First Search,Map 3,1,86,8.46843409538269,7,0.0
+1,Breadth-First Search,Map 6,1,131,12.970748662948608,7,0.0
+1,Breadth-First Search,Map 3,1,94,9.288338422775269,7,0.0

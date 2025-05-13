@@ -1,4 +1,5 @@
 import pygame
+import math
 from config import *
 
 def get_character_hitbox(pos, size, scaled_grid_size, offset_x, offset_y):
@@ -39,27 +40,25 @@ def find_nearest_free_position(start_pos, size, furniture_rects, grid, scaled_gr
     return [1, 1]
 
 def draw_health_bar(screen, pos, size, health, max_health, scaled_grid_size, offset_x, offset_y):
-    # Tính toán vị trí phía trên đầu nhân vật
     bar_width = size
     bar_height = 10
     bar_x = pos[1] * scaled_grid_size + offset_x
-    bar_y = pos[0] * scaled_grid_size + offset_y - bar_height - 5  # Cách đầu 5 pixel
-    # Vẽ nền (viền đen)
+    bar_y = pos[0] * scaled_grid_size + offset_y - bar_height - 5
     pygame.draw.rect(screen, BLACK, (bar_x, bar_y, bar_width, bar_height))
-    # Vẽ máu (màu xanh lá)
     health_width = (health / max_health) * (bar_width - 2)
     if health_width > 0:
         pygame.draw.rect(screen, GREEN, (bar_x + 1, bar_y + 1, health_width, bar_height - 2))
 
 def draw_stamina_bar(screen, pos, size, stamina, max_stamina, scaled_grid_size, offset_x, offset_y):
-    # Tính toán vị trí phía trên đầu nhân vật
     bar_width = size
     bar_height = 10
     bar_x = pos[1] * scaled_grid_size + offset_x
-    bar_y = pos[0] * scaled_grid_size + offset_y - bar_height - 5  # Cách đầu 5 pixel
-    # Vẽ nền (viền đen)
+    bar_y = pos[0] * scaled_grid_size + offset_y - bar_height - 20
     pygame.draw.rect(screen, BLACK, (bar_x, bar_y, bar_width, bar_height))
-    # Vẽ thể lực (màu xanh lam)
     stamina_width = (stamina / max_stamina) * (bar_width - 2)
     if stamina_width > 0:
-        pygame.draw.rect(screen, CYAN, (bar_x + 1, bar_y + 1, stamina_width, bar_height - 2))
+        pygame.draw.rect(screen, BLUE, (bar_x + 1, bar_y + 1, stamina_width, bar_height - 2))
+
+def calculate_distance(pos1, pos2):
+    """Tính khoảng cách Euclidean giữa hai điểm pos1 và pos2."""
+    return math.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2)

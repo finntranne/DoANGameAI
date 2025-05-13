@@ -5,6 +5,9 @@ import time
 from collections import deque
 from config import *
 from utils import check_furniture_collision, find_nearest_free_position
+from collections import defaultdict
+import sys
+sys.setrecursionlimit(5000)  # Tăng giới hạn đệ quy lên 5000
 
 def create_thief_vision_zone(thief_pos, direction, rows, cols):
     row, col = thief_pos
@@ -89,95 +92,6 @@ def bfs(start, goal, grid, character_size, furniture_rects, scaled_grid_size, of
     print("BFS: No path found!")
     return None, expanded_nodes, execution_time
 
-def dfs(start, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols):
-    if start is None or goal is None:
-        print("Error: Start or goal position is None!")
-        return None, 0, 0
-
-    adjusted_start = find_nearest_free_position(start, character_size, furniture_rects, grid, 
-                                               scaled_grid_size, offset_x, offset_y, rows, cols)
-    if adjusted_start != start:
-        print(f"Adjusted start position from {start} to {adjusted_start}")
-        start = adjusted_start
-
-    start_time = time.time()
-    expanded_nodes = 0
-
-    stack = [[start]]
-    visited = {tuple(start)}
-
-    while stack:
-        path = stack.pop()
-        x, y = path[-1]
-
-        if [x, y] == goal:
-            end_time = time.time()
-            execution_time = end_time - start_time
-            return path, expanded_nodes, execution_time
-
-        for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-            next_x, next_y = x + dx, y + dy
-            next_pos = [next_x, next_y]
-
-            if (0 <= next_x < len(grid) and 0 <= next_y < len(grid[0]) and 
-                grid[next_x][next_y] != 1 and 
-                not check_furniture_collision(next_pos, character_size, furniture_rects, 
-                                             scaled_grid_size, offset_x, offset_y) and 
-                tuple(next_pos) not in visited):
-                visited.add(tuple(next_pos))
-                stack.append(path + [next_pos])
-                expanded_nodes += 1
-    
-    end_time = time.time()
-    execution_time = end_time - start_time
-    print("DFS: No path found!")
-    return None, expanded_nodes, execution_time
-
-def greedy_best_first_search(start, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols):
-    if start is None or goal is None:
-        print("Error: Start or goal position is None!")
-        return None, 0, 0
-
-    adjusted_start = find_nearest_free_position(start, character_size, furniture_rects, grid, 
-                                               scaled_grid_size, offset_x, offset_y, rows, cols)
-    if adjusted_start != start:
-        print(f"Adjusted start position from {start} to {adjusted_start}")
-        start = adjusted_start
-
-    start_time = time.time()
-    expanded_nodes = 0
-
-    pq = [(heuristic(start, goal), [start])]
-    visited = {tuple(start)}
-
-    while pq:
-        _, path = heapq.heappop(pq)
-        x, y = path[-1]
-
-        if [x, y] == goal:
-            end_time = time.time()
-            execution_time = end_time - start_time
-            return path, expanded_nodes, execution_time
-
-        for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-            next_x, next_y = x + dx, y + dy
-            next_pos = [next_x, next_y]
-
-            if (0 <= next_x < len(grid) and 0 <= next_y < len(grid[0]) and 
-                grid[next_x][next_y] != 1 and 
-                not check_furniture_collision(next_pos, character_size, furniture_rects, 
-                                             scaled_grid_size, offset_x, offset_y) and 
-                tuple(next_pos) not in visited):
-                visited.add(tuple(next_pos))
-                priority = heuristic(next_pos, goal)
-                heapq.heappush(pq, (priority, path + [next_pos]))
-                expanded_nodes += 1
-    
-    end_time = time.time()
-    execution_time = end_time - start_time
-    print("Greedy Best-First Search: No path found!")
-    return None, expanded_nodes, execution_time
-
 def a_star(start, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols):
     def heuristic(a, b):
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
@@ -227,109 +141,15 @@ def a_star(start, goal, grid, character_size, furniture_rects, scaled_grid_size,
     print("A* Search: No path found!")
     return None, expanded_nodes, execution_time
 
-def uniform_cost_search(start, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols):
-    if start is None or goal is None:
-        print("Error: Start or goal position is None!")
-        return None, 0, 0
-
-    adjusted_start = find_nearest_free_position(start, character_size, furniture_rects, grid, 
-                                               scaled_grid_size, offset_x, offset_y, rows, cols)
-    if adjusted_start != start:
-        print(f"Adjusted start position from {start} to {adjusted_start}")
-        start = adjusted_start
-
-    start_time = time.time()
-    expanded_nodes = 0
-
-    pq = [(0, [start])]
-    visited = {tuple(start): 0}
-
-    while pq:
-        cost, path = heapq.heappop(pq)
-        x, y = path[-1]
-
-        if [x, y] == goal:
-            end_time = time.time()
-            execution_time = end_time - start_time
-            return path, expanded_nodes, execution_time
-
-        for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-            next_x, next_y = x + dx, y + dy
-            next_pos = [next_x, next_y]
-            new_cost = cost + 1
-
-            if (0 <= next_x < len(grid) and 0 <= next_y < len(grid[0]) and 
-                grid[next_x][next_y] != 1 and 
-                not check_furniture_collision(next_pos, character_size, furniture_rects, 
-                                             scaled_grid_size, offset_x, offset_y) and 
-                (tuple(next_pos) not in visited or new_cost < visited[tuple(next_pos)])):
-                visited[tuple(next_pos)] = new_cost
-                heapq.heappush(pq, (new_cost, path + [next_pos]))
-                expanded_nodes += 1
+def beam_search(start, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols, beam_width=20):
+    def heuristic(a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
     
-    end_time = time.time()
-    execution_time = end_time - start_time
-    print("Uniform Cost Search: No path found!")
-    return None, expanded_nodes, execution_time
-
-def iddfs(start, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols):
     if start is None or goal is None:
         print("Error: Start or goal position is None!")
         return None, 0, 0
-
-    adjusted_start = find_nearest_free_position(start, character_size, furniture_rects, grid, 
-                                               scaled_grid_size, offset_x, offset_y, rows, cols)
-    if adjusted_start != start:
-        print(f"Adjusted start position from {start} to {adjusted_start}")
-        start = adjusted_start
-
-    start_time = time.time()
-    expanded_nodes = 0
-
-    def dls(path, depth, visited):
-        nonlocal expanded_nodes
-        if depth < 0:
-            return None
-        x, y = path[-1]
-        if [x, y] == goal:
-            return path
-        for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-            next_x, next_y = x + dx, y + dy
-            next_pos = [next_x, next_y]
-            if (0 <= next_x < len(grid) and 0 <= next_y < len(grid[0]) and 
-                grid[next_x][next_y] != 1 and 
-                not check_furniture_collision(next_pos, character_size, furniture_rects, 
-                                             scaled_grid_size, offset_x, offset_y) and 
-                tuple(next_pos) not in visited):
-                visited.add(tuple(next_pos))
-                expanded_nodes += 1
-                result = dls(path + [next_pos], depth - 1, visited)
-                if result:
-                    return result
-                visited.remove(tuple(next_pos))
-        return None
-
-    depth = 1
-    max_depth = rows * cols
-    while depth <= max_depth:
-        visited = {tuple(start)}
-        result = dls([start], depth, visited)
-        if result:
-            end_time = time.time()
-            execution_time = end_time - start_time
-            return result, expanded_nodes, execution_time
-        depth += 1
     
-    end_time = time.time()
-    execution_time = end_time - start_time
-    print("IDDFS: No path found!")
-    return None, expanded_nodes, execution_time
-
-def ida_star(start, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols):
-    if start is None or goal is None:
-        print("Error: Start or goal position is None!")
-        return None, 0, 0
-
+    # Adjust start position if necessary
     adjusted_start = find_nearest_free_position(start, character_size, furniture_rects, grid, 
                                                scaled_grid_size, offset_x, offset_y, rows, cols)
     if adjusted_start != start:
@@ -339,295 +159,146 @@ def ida_star(start, goal, grid, character_size, furniture_rects, scaled_grid_siz
     start_time = time.time()
     expanded_nodes = 0
 
-    def search(path, g, threshold, visited):
-        nonlocal expanded_nodes
-        x, y = path[-1]
-        f = g + heuristic([x, y], goal)
-        if f > threshold:
-            return f, None
-        if [x, y] == goal:
-            return f, path
-        min_threshold = float('inf')
-        for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-            next_x, next_y = x + dx, y + dy
-            next_pos = [next_x, next_y]
-            if (0 <= next_x < len(grid) and 0 <= next_y < len(grid[0]) and 
-                grid[next_x][next_y] != 1 and 
-                not check_furniture_collision(next_pos, character_size, furniture_rects, 
-                                             scaled_grid_size, offset_x, offset_y) and 
-                tuple(next_pos) not in visited):
-                visited.add(tuple(next_pos))
-                expanded_nodes += 1
-                new_threshold, result = search(path + [next_pos], g + 1, threshold, visited)
-                visited.remove(tuple(next_pos))
-                if result:
-                    return new_threshold, result
-                min_threshold = min(min_threshold, new_threshold)
-        return min_threshold, None
+    # Initialize beam with the starting path
+    beam = [(heuristic(start, goal), 0, [start])]  # (heuristic_score, cost, path)
+    visited = {tuple(start): 0}  # Track visited positions with their cost
 
-    threshold = heuristic(start, goal)
-    while True:
-        visited = {tuple(start)}
-        new_threshold, path = search([start], 0, threshold, visited)
-        if path:
-            end_time = time.time()
-            execution_time = end_time - start_time
-            return path, expanded_nodes, execution_time
-        if new_threshold == float('inf'):
-            end_time = time.time()
-            execution_time = end_time - start_time
-            print("IDA* Search: No path found!")
-            return None, expanded_nodes, execution_time
-        threshold = new_threshold
-
-def simple_hill_climbing(start, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols):
-    if start is None or goal is None:
-        print("Error: Start or goal position is None!")
-        return None, 0, 0
-
-    adjusted_start = find_nearest_free_position(start, character_size, furniture_rects, grid, 
-                                               scaled_grid_size, offset_x, offset_y, rows, cols)
-    if adjusted_start != start:
-        print(f"Adjusted start position from {start} to {adjusted_start}")
-        start = adjusted_start
-
-    start_time = time.time()
-    expanded_nodes = 0
-
-    path = [start]
-    current = start
-    max_steps = rows * cols
-
-    for _ in range(max_steps):
-        if current == goal:
-            end_time = time.time()
-            execution_time = end_time - start_time
-            return path, expanded_nodes, execution_time
-        neighbors = []
-        for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-            next_x, next_y = current[0] + dx, current[1] + dy
-            next_pos = [next_x, next_y]
-            if (0 <= next_x < len(grid) and 0 <= next_y < len(grid[0]) and 
-                grid[next_x][next_y] != 1 and 
-                not check_furniture_collision(next_pos, character_size, furniture_rects, 
-                                             scaled_grid_size, offset_x, offset_y)):
-                neighbors.append(next_pos)
-                expanded_nodes += 1
-        if not neighbors:
-            end_time = time.time()
-            execution_time = end_time - start_time
-            print("Simple Hill Climbing: No valid neighbors!")
-            return None, expanded_nodes, execution_time
-        best_neighbor = min(neighbors, key=lambda pos: heuristic(pos, goal))
-        current = best_neighbor
-        path.append(current)
-    
-    end_time = time.time()
-    execution_time = end_time - start_time
-    print("Simple Hill Climbing: No path found within max steps!")
-    return None, expanded_nodes, execution_time
-
-def steepest_hill_climbing(start, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols):
-    if start is None or goal is None:
-        print("Error: Start or goal position is None!")
-        return None, 0, 0
-
-    adjusted_start = find_nearest_free_position(start, character_size, furniture_rects, grid, 
-                                               scaled_grid_size, offset_x, offset_y, rows, cols)
-    if adjusted_start != start:
-        print(f"Adjusted start position from {start} to {adjusted_start}")
-        start = adjusted_start
-
-    start_time = time.time()
-    expanded_nodes = 0
-
-    path = [start]
-    current = start
-    max_steps = rows * cols
-
-    for _ in range(max_steps):
-        if current == goal:
-            end_time = time.time()
-            execution_time = end_time - start_time
-            return path, expanded_nodes, execution_time
-        neighbors = []
-        for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-            next_x, next_y = current[0] + dx, current[1] + dy
-            next_pos = [next_x, next_y]
-            if (0 <= next_x < len(grid) and 0 <= next_y < len(grid[0]) and 
-                grid[next_x][next_y] != 1 and 
-                not check_furniture_collision(next_pos, character_size, furniture_rects, 
-                                             scaled_grid_size, offset_x, offset_y)):
-                neighbors.append(next_pos)
-                expanded_nodes += 1
-        if not neighbors:
-            end_time = time.time()
-            execution_time = end_time - start_time
-            print("Steepest Hill Climbing: No valid neighbors!")
-            return None, expanded_nodes, execution_time
-        best_neighbor = min(neighbors, key=lambda pos: heuristic(pos, goal))
-        if heuristic(best_neighbor, goal) >= heuristic(current, goal):
-            end_time = time.time()
-            execution_time = end_time - start_time
-            print("Steepest Hill Climbing: Stuck at local minimum!")
-            return None, expanded_nodes, execution_time
-        current = best_neighbor
-        path.append(current)
-    
-    end_time = time.time()
-    execution_time = end_time - start_time
-    print("Steepest Hill Climbing: No path found within max steps!")
-    return None, expanded_nodes, execution_time
-
-def stochastic_hill_climbing(start, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols):
-    if start is None or goal is None:
-        print("Error: Start or goal position is None!")
-        return None, 0, 0
-
-    adjusted_start = find_nearest_free_position(start, character_size, furniture_rects, grid, 
-                                               scaled_grid_size, offset_x, offset_y, rows, cols)
-    if adjusted_start != start:
-        print(f"Adjusted start position from {start} to {adjusted_start}")
-        start = adjusted_start
-
-    start_time = time.time()
-    expanded_nodes = 0
-
-    path = [start]
-    current = start
-    max_steps = rows * cols
-
-    for _ in range(max_steps):
-        if current == goal:
-            end_time = time.time()
-            execution_time = end_time - start_time
-            return path, expanded_nodes, execution_time
-        neighbors = []
-        for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-            next_x, next_y = current[0] + dx, current[1] + dy
-            next_pos = [next_x, next_y]
-            if (0 <= next_x < len(grid) and 0 <= next_y < len(grid[0]) and 
-                grid[next_x][next_y] != 1 and 
-                not check_furniture_collision(next_pos, character_size, furniture_rects, 
-                                             scaled_grid_size, offset_x, offset_y)):
-                neighbors.append(next_pos)
-                expanded_nodes += 1
-        if not neighbors:
-            end_time = time.time()
-            execution_time = end_time - start_time
-            print("Stochastic Hill Climbing: No valid neighbors!")
-            return None, expanded_nodes, execution_time
-        better_neighbors = [n for n in neighbors if heuristic(n, goal) <= heuristic(current, goal)]
-        if better_neighbors:
-            current = random.choice(better_neighbors)
-        else:
-            current = random.choice(neighbors)
-        path.append(current)
-    
-    end_time = time.time()
-    execution_time = end_time - start_time
-    print("Stochastic Hill Climbing: No path found within max steps!")
-    return None, expanded_nodes, execution_time
-
-def simulated_annealing(start, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols):
-    if start is None or goal is None:
-        print("Error: Start or goal position is None!")
-        return None, 0, 0
-
-    adjusted_start = find_nearest_free_position(start, character_size, furniture_rects, grid, 
-                                               scaled_grid_size, offset_x, offset_y, rows, cols)
-    if adjusted_start != start:
-        print(f"Adjusted start position from {start} to {adjusted_start}")
-        start = adjusted_start
-
-    start_time = time.time()
-    expanded_nodes = 0
-
-    path = [start]
-    current = start
-    temperature = 1000.0
-    cooling_rate = 0.995
-    max_steps = rows * cols
-
-    for _ in range(max_steps):
-        if current == goal:
-            end_time = time.time()
-            execution_time = end_time - start_time
-            return path, expanded_nodes, execution_time
-        temperature *= cooling_rate
-        if temperature < 0.1:
-            break
-        neighbors = []
-        for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-            next_x, next_y = current[0] + dx, current[1] + dy
-            next_pos = [next_x, next_y]
-            if (0 <= next_x < len(grid) and 0 <= next_y < len(grid[0]) and 
-                grid[next_x][next_y] != 1 and 
-                not check_furniture_collision(next_pos, character_size, furniture_rects, 
-                                             scaled_grid_size, offset_x, offset_y)):
-                neighbors.append(next_pos)
-                expanded_nodes += 1
-        if not neighbors:
-            end_time = time.time()
-            execution_time = end_time - start_time
-            print("Simulated Annealing: No valid neighbors!")
-            return None, expanded_nodes, execution_time
-        next_pos = random.choice(neighbors)
-        delta = heuristic(next_pos, goal) - heuristic(current, goal)
-        if delta <= 0 or random.random() < math.exp(-delta / temperature):
-            current = next_pos
-            path.append(current)
-    
-    end_time = time.time()
-    execution_time = end_time - start_time
-    print("Simulated Annealing: No path found within max steps!")
-    return None, expanded_nodes, execution_time
-
-def beam_search(start, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols, beam_width=3):
-    if start is None or goal is None:
-        print("Error: Start or goal position is None!")
-        return None, 0, 0
-
-    adjusted_start = find_nearest_free_position(start, character_size, furniture_rects, grid, 
-                                               scaled_grid_size, offset_x, offset_y, rows, cols)
-    if adjusted_start != start:
-        print(f"Adjusted start position from {start} to {adjusted_start}")
-        start = adjusted_start
-
-    start_time = time.time()
-    expanded_nodes = 0
-
-    beams = [[start]]
-    visited = {tuple(start)}
-
-    while beams:
-        new_beams = []
-        for path in beams:
+    while beam:
+        # Select top beam_width paths
+        next_beam = []
+        for _ in range(min(len(beam), beam_width)):
+            if not beam:
+                break
+            _, cost, path = heapq.heappop(beam)
             x, y = path[-1]
+
+            # Check if goal is reached
             if [x, y] == goal:
                 end_time = time.time()
                 execution_time = end_time - start_time
                 return path, expanded_nodes, execution_time
+
+            # Explore neighbors
             for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
                 next_x, next_y = x + dx, y + dy
                 next_pos = [next_x, next_y]
+                new_cost = cost + 1
+
+                # Check if move is valid
                 if (0 <= next_x < len(grid) and 0 <= next_y < len(grid[0]) and 
                     grid[next_x][next_y] != 1 and 
                     not check_furniture_collision(next_pos, character_size, furniture_rects, 
                                                  scaled_grid_size, offset_x, offset_y) and 
-                    tuple(next_pos) not in visited):
-                    visited.add(tuple(next_pos))
-                    new_beams.append(path + [next_pos])
+                    (tuple(next_pos) not in visited or new_cost < visited[tuple(next_pos)])):
+                    visited[tuple(next_pos)] = new_cost
+                    new_path = path + [next_pos]
+                    score = new_cost + heuristic(next_pos, goal)  # f(n) = g(n) + h(n)
+                    heapq.heappush(next_beam, (score, new_cost, new_path))
                     expanded_nodes += 1
-        new_beams.sort(key=lambda path: heuristic(path[-1], goal))
-        beams = new_beams[:beam_width]
-        if not beams:
-            break
-    
+
+        # Update beam with the best paths
+        beam = next_beam
+
     end_time = time.time()
     execution_time = end_time - start_time
     print("Beam Search: No path found!")
     return None, expanded_nodes, execution_time
+
+
+
+def ac3(thief_pos, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols, master_pos):
+    # Khởi tạo miền giá trị cho mỗi ô
+    domains = defaultdict(list)
+    for i in range(rows):
+        for j in range(cols):
+            if grid[i][j] != 1 and not check_furniture_collision([i, j], character_size, furniture_rects, scaled_grid_size, offset_x, offset_y):
+                domains[(i, j)] = [(i + di, j + dj) for di, dj in [(0, 1), (1, 0), (0, -1), (-1, 0)]
+                                   if 0 <= i + di < rows and 0 <= j + dj < cols and grid[i + di][j + dj] != 1]
+
+    # Loại bỏ các ô nằm trong tầm nhìn của master
+    master_zone = create_master_vision_zone(master_pos, rows, cols)
+    for pos in list(domains.keys()):
+        if pos in master_zone:
+            del domains[pos]
+        else:
+            domains[pos] = [next_pos for next_pos in domains[pos] if next_pos not in master_zone]
+
+    # Tạo hàng đợi các ràng buộc
+    queue = []
+    for pos in domains:
+        for neighbor in domains[pos]:
+            queue.append((pos, neighbor))
+
+    # Áp dụng AC-3
+    while queue:
+        (xi, xj) = queue.pop(0)
+        removed = False
+        for val in domains[xi][:]:
+            if not any(check_constraints(val, neighbor, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, master_pos)
+                       for neighbor in domains[xj]):
+                domains[xi].remove(val)
+                removed = True
+        if removed:
+            for xk in [p for p in domains if p != xj and xj in domains[p]]:
+                queue.append((xk, xj))
+
+    return domains
+
+def check_constraints(pos, next_pos, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, master_pos):
+    # Chuyển next_pos thành list nếu nó là tuple
+    next_pos = list(next_pos) if isinstance(next_pos, tuple) else next_pos
+    x, y = next_pos
+    if not (0 <= x < len(grid) and 0 <= y < len(grid[0])):
+        return False
+    if grid[x][y] == 1:
+        return False
+    if check_furniture_collision(next_pos, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y):
+        return False
+    if master_vision(master_pos, next_pos, len(grid), len(grid[0])):
+        return False
+    return True
+
+def backtracking_with_ac3(start, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols, master_pos):
+    start_time = time.time()
+    expanded_nodes = 0
+
+    domains = ac3(start, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols, master_pos)
+
+    def heuristic(pos):
+        return abs(pos[0] - goal[0]) + abs(pos[1] - goal[1])
+
+    visited = set()
+    max_depth = rows * cols
+
+    def backtrack(current_pos, path, depth=0):
+        nonlocal expanded_nodes
+        if depth > max_depth:
+            return None
+        if current_pos == tuple(goal):
+            return path
+
+        x, y = current_pos
+        visited.add(current_pos)
+        # Sắp xếp các ô tiếp theo theo heuristic
+        next_positions = sorted(domains.get(current_pos, []), key=heuristic)
+        for next_pos in next_positions:
+            if next_pos not in visited and check_constraints(current_pos, next_pos, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, master_pos):
+                expanded_nodes += 1
+                result = backtrack(next_pos, path + [list(next_pos)], depth + 1)
+                if result:
+                    return result
+        visited.remove(current_pos)
+        return None
+
+    path = backtrack(tuple(start), [start])
+    end_time = time.time()
+    execution_time = end_time - start_time
+
+    if path is None:
+        print("Backtracking with AC-3: No path found!")
+        return None, expanded_nodes, execution_time
+
+    return path, expanded_nodes, execution_time
 
 def master_patrol(master_pos, waypoints, map_grid, rows, cols, character_size, furniture_rects, 
                   scaled_grid_size, offset_x, offset_y):

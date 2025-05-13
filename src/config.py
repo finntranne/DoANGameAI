@@ -38,7 +38,15 @@ REST_DURATION = 2  # Thời gian nghỉ 1 giây
 THIEF_MAX_HEALTH = 100
 THIEF_TRAP_DAMAGE = 5
 MASTER_MAX_STAMINA = 100
-MASTER_STAMINA_DRAIN_RATE = 20  # Thể lực giảm mỗi giây khi đuổi
+MASTER_STAMINA_DRAIN_RATE = 5  # Giảm 2 thể lực mỗi giây khi truy đuổi
+MASTER_STAMINA_RECOVER_RATE = 5  # Hồi 5 thể lực mỗi giây khi tuần tra
+LOW_STAMINA_THRESHOLD = 0
+blood = 100
+MAX_BLOOD = 100
+master_stamina = MASTER_MAX_STAMINA  # Thể lực ban đầu của master
+
+
+NIGHT_OPACITY = 100
 
 # Đường dẫn file âm thanh
 SOUND_FILES = {
@@ -56,17 +64,9 @@ SOUND_FILES = {
 # Danh sách thuật toán AI
 AI_ALGORITHMS = {
     "Breadth-First Search": "bfs",
-    "Depth-First Search": "dfs",
-    "Uniform Cost Search": "uniform_cost_search",
-    "Iterative Deepening DFS": "iddfs",
-    "Greedy Best-First Search": "greedy_best_first_search",
     "A* Search": "a_star",
-    "IDA* Search": "ida_star",
-    "Simple Hill Climbing": "simple_hill_climbing",
-    "Steepest Hill Climbing": "steepest_hill_climbing",
-    "Stochastic Hill Climbing": "stochastic_hill_climbing",
-    "Simulated Annealing": "simulated_annealing",
-    "Beam Search": "beam_search"
+    "Beam Search": "beam_search",
+    "Backtracking with AC-3": "backtracking_with_ac3"
 }
 
 # Danh sách bản đồ

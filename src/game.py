@@ -21,7 +21,7 @@ try:
     gold_sound = pygame.mixer.Sound(SOUND_FILES["gold"])
     hurt_sound = pygame.mixer.Sound(SOUND_FILES["hurt"])
     alert_sound = pygame.mixer.Sound(SOUND_FILES.get("alert", "assets/sounds/alert.wav"))
-    escaped_sound = pygame.mixer.Sound(SOUND_FILES["escaped"])  # Thêm âm thanh Escaped
+    escaped_sound = pygame.mixer.Sound(SOUND_FILES["escaped"])
 except pygame.error as e:
     print(f"Error loading sound: {e}")
     success_sound = None
@@ -50,17 +50,9 @@ except pygame.error as e:
 # Ánh xạ tên thuật toán sang hàm thực tế
 AI_ALGORITHM_FUNCTIONS = {
     "Breadth-First Search": bfs,
-    "Depth-First Search": dfs,
-    "Uniform Cost Search": uniform_cost_search,
-    "Iterative Deepening DFS": iddfs,
-    "Greedy Best-First Search": greedy_best_first_search,
     "A* Search": a_star,
-    "IDA* Search": ida_star,
-    "Simple Hill Climbing": simple_hill_climbing,
-    "Steepest Hill Climbing": steepest_hill_climbing,
-    "Stochastic Hill Climbing": stochastic_hill_climbing,
-    "Simulated Annealing": simulated_annealing,
-    "Beam Search": beam_search
+    "Beam Search": beam_search,
+    "Backtracking with AC-3": backtracking_with_ac3
 }
 
 # Khởi tạo menu chính và menu tạm dừng
@@ -77,7 +69,6 @@ is_thief_detected = False
 current_music = None
 menu_music_playing = False
 last_detected_state = False
-
 
 # Biến trò chơi
 tmx_data = None
@@ -100,7 +91,6 @@ MASTER_SIZE = None
 TRAP_SIZE = None
 is_master_resting = False
 rest_timer = 0
-
 
 # Biến thống kê
 success_count = 0
@@ -216,6 +206,7 @@ while True:
                         menu_state = "main"
                         current_run = 0
                         blood = 100
+                        master_stamina = MASTER_MAX_STAMINA
                         success_count = 0
                         failure_count = 0
                         total_path_length = 0
@@ -243,7 +234,6 @@ while True:
                         coin_sprites = load_coin_sprites(SCALED_GRID_SIZE)
                         trap_sprites, TRAP_SIZE = load_trap_sprites(SCALED_GRID_SIZE)
                         thief_pos, master_pos, items, traps, exit_pos = load_positions(tmx_data)
-                         # Add triggered flag to each trap
                         for trap in traps:
                             trap["triggered"] = False
                         print(f"Loaded traps: {traps}")
@@ -265,7 +255,7 @@ while True:
                             print("Warning: Exit position not found in the map! Using default position.")
                             exit_pos = [10, 10]
                         coin_types = ["red", "silver", "gold"]
-                        item_coins = [(pos, coin_types[i % len(coin_types)]) for i, pos in enumerate(items)]
+                        item_coins = [(pos, coin_types[i % len(coin_types)], False) for i, pos in enumerate(items)]
                         exit_img = pygame.Surface((SCALED_GRID_SIZE, SCALED_GRID_SIZE))
                         exit_img.fill(WHITE)
                         collected_items = 0
@@ -349,7 +339,6 @@ while True:
                 current_run += 1
                 if current_run < selected_params["num_runs"]:
                     thief_pos, master_pos, items, traps, exit_pos = load_positions(tmx_data)
-                    # Reset triggered flag for all traps
                     for trap in traps:
                         trap["triggered"] = False
                     print(f"Reloaded traps for run {current_run + 1}: {traps}")
@@ -367,7 +356,7 @@ while True:
                                                                SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
                     if exit_pos is None:
                         exit_pos = [10, 10]
-                    item_coins = [(pos, coin_types[i % len(coin_types)]) for i, pos in enumerate(items)]
+                    item_coins = [(pos, coin_types[i % len(coin_types)], False) for i, pos in enumerate(items)]
                     collected_items = 0
                     path = None
                     master_waypoints = []
@@ -385,6 +374,7 @@ while True:
                     last_detected_state = False
                     is_master_resting = False
                     rest_timer = 0
+                    master_stamina = MASTER_MAX_STAMINA
                     run_start_time = time.time()
                     path_length = 0
                     play_background_music()
@@ -419,13 +409,13 @@ while True:
                     play_menu_music()
                     continue
 
-                # Kiểm tra giao nhau giữa vùng tầm nhìn của thief và master
+                # Kiểm tra giao nhau giữa vùng tầm nhìn
                 thief_zone = create_thief_vision_zone(thief_pos, thief_direction, ROWS, COLS)
                 master_zone = create_master_vision_zone(master_pos, ROWS, COLS)
                 zones_intersect = check_vision_zone_intersection(thief_zone, master_zone)
 
-                # Nếu vùng tầm nhìn giao nhau hoặc master thấy thief, kích hoạt chế độ truy đuổi
-                new_detected_state = zones_intersect or master_vision(master_pos, thief_pos, ROWS, COLS)
+                # Cập nhật trạng thái phát hiện
+                new_detected_state = zones_intersect and master_stamina > 0
                 if new_detected_state != last_detected_state:
                     is_thief_detected = new_detected_state
                     last_detected_state = new_detected_state
@@ -433,18 +423,107 @@ while True:
                         if is_thief_detected and alert_sound:
                             alert_sound.play()
                         play_background_music()
+                    if not is_thief_detected:
+                        # Khi ngừng truy đuổi, xóa các waypoint cũ và đặt lại đường đi
+                        master_waypoints = []
+                        master_path = None
+                        master_patrol_counter = 0
+                        is_master_resting = False
+                        rest_timer = 0
+                        print("Master switching to patrol mode, generating new waypoint")
+
+                # Quản lý thể lực của master
+                if is_thief_detected:
+                    master_stamina -= MASTER_STAMINA_DRAIN_RATE
+                    if master_stamina <= 0:
+                        is_thief_detected = False
+                        last_detected_state = False
+                        master_path = None
+                        print("Master exhausted, switching to patrol mode")
+                else:
+                    master_stamina = min(master_stamina + MASTER_STAMINA_RECOVER_RATE, MASTER_MAX_STAMINA)
 
                 # Logic di chuyển của thief
-                if is_thief_detected:
+                available_coins = [(pos, coin_type) for pos, coin_type, collected in item_coins if not collected]
+                if is_thief_detected or zones_intersect:
+                    # Trộm chạy về phía cửa thoát
                     path, expanded_nodes, execution_time = algorithm(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
                                                                     SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
                 else:
-                    if collected_items < len(items):
-                        path, expanded_nodes, execution_time = algorithm(thief_pos, items[collected_items], map_grid, THIEF_SIZE, furniture_rects, 
+                    # Trộm tìm coin gần nhất chưa được nhặt
+                    if available_coins:
+                        nearest_coin = min(available_coins, key=lambda x: calculate_distance(thief_pos, x[0]))
+                        path, expanded_nodes, execution_time = algorithm(thief_pos, nearest_coin[0], map_grid, THIEF_SIZE, furniture_rects, 
                                                                         SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
                     else:
+                        # Nếu không còn coin, chạy về cửa thoát
                         path, expanded_nodes, execution_time = algorithm(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
                                                                         SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
+
+                # Logic di chuyển của master
+                if is_thief_detected:
+                    if master_path is None or len(master_path) <= 1:
+                        master_path, _, _ = master_chase(master_pos, thief_pos, map_grid, MASTER_SIZE, furniture_rects, 
+                                                        SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
+                    is_master_resting = False
+                    rest_timer = 0
+                    master_patrol_counter = 0
+                    if master_path and len(master_path) > 1:
+                        next_pos = master_path[1]
+                        if not check_furniture_collision(next_pos, MASTER_SIZE, furniture_rects, SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y):
+                            dx = next_pos[0] - master_pos[0]
+                            dy = next_pos[1] - master_pos[1]
+                            if dx == -1:
+                                master_direction = "up"
+                            elif dx == 1:
+                                master_direction = "down"
+                            elif dy == -1:
+                                master_direction = "left"
+                            elif dy == 1:
+                                master_direction = "right"
+                            master_pos = next_pos
+                            master_path.pop(0)
+                else:
+                    if is_master_resting:
+                        rest_timer += 1 / 10
+                        if rest_timer >= REST_DURATION:
+                            is_master_resting = False
+                            rest_timer = 0
+                            master_path = None
+                    else:
+                        if master_path is None or len(master_path) <= 1:
+                            master_path, _, _ = master_patrol(master_pos, master_waypoints, map_grid, ROWS, COLS, MASTER_SIZE, 
+                                                            furniture_rects, SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y)
+                            if master_path is None or len(master_path) <= 1:
+                                if master_waypoints:
+                                    print("Removing unreachable waypoint:", master_waypoints[0])
+                                    master_waypoints.pop(0)
+                        master_patrol_counter += 1
+                        if master_patrol_counter >= 2:
+                            if master_path and len(master_path) > 1:
+                                next_pos = master_path[1]
+                                if not check_furniture_collision(next_pos, MASTER_SIZE, furniture_rects, SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y):
+                                    dx = next_pos[0] - master_pos[0]
+                                    dy = next_pos[1] - master_pos[1]
+                                    if dx == -1:
+                                        master_direction = "up"
+                                    elif dx == 1:
+                                        master_direction = "down"
+                                    elif dy == -1:
+                                        master_direction = "left"
+                                    elif dy == 1:
+                                        master_direction = "right"
+                                    master_pos = next_pos
+                                    master_path.pop(0)
+                                    if len(master_path) <= 1:
+                                        is_master_resting = True
+                                        rest_timer = 0
+                                else:
+                                    if master_waypoints:
+                                        print("Removing unreachable waypoint:", master_waypoints[0])
+                                        master_waypoints.pop(0)
+                                        master_path = None
+                            master_patrol_counter = 0
 
                 total_expanded_nodes += expanded_nodes
                 total_execution_time += execution_time
@@ -467,9 +546,9 @@ while True:
                         path.pop(0)
 
                         if not is_thief_detected:
-                            for i, (item_pos, _) in enumerate(item_coins):
-                                if thief_pos == item_pos:
-                                    item_coins.pop(i)
+                            for i, (item_pos, coin_type, collected) in enumerate(item_coins):
+                                if thief_pos == item_pos and not collected:
+                                    item_coins[i] = (item_pos, coin_type, True)
                                     collected_items += 1
                                     if sound_enabled and gold_sound:
                                         if current_music:
@@ -507,7 +586,6 @@ while True:
                         path = None
 
                 # Kiểm tra va chạm với trap
-                
                 trap_type = check_trap_collision(thief_pos, THIEF_SIZE, traps, SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y)
                 if trap_type:
                     for trap in traps:
@@ -536,75 +614,6 @@ while True:
                             current_music.stop()
                         play_menu_music()
                         continue
-
-                new_detected_state = master_vision(master_pos, thief_pos, ROWS, COLS)
-                if new_detected_state != is_thief_detected:
-                    is_thief_detected = new_detected_state
-                    if not game_over:
-                        play_background_music()
-
-                # Logic di chuyển của master
-                if is_thief_detected:
-                    master_path, _, _ = master_chase(master_pos, thief_pos, map_grid, MASTER_SIZE, furniture_rects, 
-                                                    SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
-                    is_master_resting = False
-                    rest_timer = 0
-                    if master_path and len(master_path) > 1:
-                        next_pos = master_path[1]
-                        if not check_furniture_collision(next_pos, MASTER_SIZE, furniture_rects, SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y):
-                            dx = next_pos[0] - master_pos[0]
-                            dy = next_pos[1] - master_pos[1]
-                            if dx == -1:
-                                master_direction = "up"
-                            elif dx == 1:
-                                master_direction = "down"
-                            elif dy == -1:
-                                master_direction = "left"
-                            elif dy == 1:
-                                master_direction = "right"
-                            master_pos = next_pos
-                            master_path.pop(0)
-                else:
-                    if is_master_resting:
-                        rest_timer += 1 / 10
-                        if rest_timer >= REST_DURATION:
-                            is_master_resting = False
-                            rest_timer = 0
-                            master_path = None
-                    else:
-                        if master_path is None or len(master_path) <= 1:
-                            master_path, _, _ = master_patrol(master_pos, master_waypoints, map_grid, ROWS, COLS, MASTER_SIZE, 
-                                                             furniture_rects, SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y)
-                            if master_path is None or len(master_path) <= 1:
-                                if master_waypoints:
-                                    print("Removing unreachable waypoint:", master_waypoints[0])
-                                    master_waypoints.pop(0)
-                        master_patrol_counter += 1
-                        if master_patrol_counter >= 2:
-                            if master_path and len(master_path) > 1:
-                                next_pos = master_path[1]
-                                if not check_furniture_collision(next_pos, MASTER_SIZE, furniture_rects, SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y):
-                                    dx = next_pos[0] - master_pos[0]
-                                    dy = next_pos[1] - master_pos[1]
-                                    if dx == -1:
-                                        master_direction = "up"
-                                    elif dx == 1:
-                                        master_direction = "down"
-                                    elif dy == -1:
-                                        master_direction = "left"
-                                    elif dy == 1:
-                                        master_direction = "right"
-                                    master_pos = next_pos
-                                    master_path.pop(0)
-                                    if len(master_path) <= 1:
-                                        is_master_resting = True
-                                        rest_timer = 0
-                                else:
-                                    if master_waypoints:
-                                        print("Removing unreachable waypoint:", master_waypoints[0])
-                                        master_waypoints.pop(0)
-                                        master_path = None
-                            master_patrol_counter = 0
 
                 if master_pos == thief_pos:
                     print(f"Run {current_run + 1}/{selected_params['num_runs']}: Ten trom bi bat")
@@ -636,7 +645,19 @@ while True:
     if state in ["game", "paused"]:
         screen.fill(GRAY)
         draw_map(screen, tmx_data, map_data, map_file)
-
+                # Tạo và vẽ lớp phủ đêm
+        night_overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        night_overlay.fill((0, 0, 0, NIGHT_OPACITY))  # Đen bán trong suốt
+        # Xóa vùng nhìn của thief
+        thief_center_x = thief_pos[1] * SCALED_GRID_SIZE + OFFSET_X + SCALED_GRID_SIZE / 2
+        thief_center_y = thief_pos[0] * SCALED_GRID_SIZE + OFFSET_Y + SCALED_GRID_SIZE / 2
+        pygame.draw.circle(night_overlay, (0, 0, 0, 0), (int(thief_center_x), int(thief_center_y)), THIEF_VISION_RANGE * SCALED_GRID_SIZE)
+        # Xóa vùng nhìn của master
+        master_center_x = master_pos[1] * SCALED_GRID_SIZE + OFFSET_X + SCALED_GRID_SIZE / 2
+        master_center_y = master_pos[0] * SCALED_GRID_SIZE + OFFSET_Y + SCALED_GRID_SIZE / 2
+        pygame.draw.circle(night_overlay, (0, 0, 0, 0), (int(master_center_x), int(master_center_y)), MASTER_VISION_RANGE * SCALED_GRID_SIZE)
+        screen.blit(night_overlay, (0, 0))
+        
         center_x = thief_pos[1] * SCALED_GRID_SIZE + OFFSET_X + SCALED_GRID_SIZE / 2
         center_y = thief_pos[0] * SCALED_GRID_SIZE + OFFSET_Y + SCALED_GRID_SIZE / 2
         radius = THIEF_VISION_RANGE * SCALED_GRID_SIZE
@@ -652,16 +673,18 @@ while True:
             draw_x = trap["pos"][1] * SCALED_GRID_SIZE + OFFSET_X
             draw_y = trap["pos"][0] * SCALED_GRID_SIZE + OFFSET_Y
             screen.blit(trap_img, (int(draw_x), int(draw_y)))
-           # Vẽ thanh máu trên đầu trộm
-        bar_width = THIEF_SIZE  # Chiều rộng thanh máu bằng kích thước trộm
-        bar_height = 5  # Chiều cao thanh máu
-        bar_x = thief_pos[1] * SCALED_GRID_SIZE + OFFSET_X + (THIEF_SIZE - bar_width) / 2  # Căn giữa theo x
-        bar_y = thief_pos[0] * SCALED_GRID_SIZE + OFFSET_Y - bar_height - 5  # Cách đầu trộm 5 pixel
-        # Vẽ nền thanh máu (màu xám)
+
+        # Vẽ thanh máu trên đầu trộm
+        bar_width = THIEF_SIZE
+        bar_height = 5
+        bar_x = thief_pos[1] * SCALED_GRID_SIZE + OFFSET_X + (THIEF_SIZE - bar_width) / 2
+        bar_y = thief_pos[0] * SCALED_GRID_SIZE + OFFSET_Y - bar_height - 5
         pygame.draw.rect(screen, (255, 0, 0), (bar_x, bar_y, bar_width, bar_height))
-        # Vẽ phần máu còn lại (màu xanh lá)
         filled_width = (blood / MAX_BLOOD) * bar_width
         pygame.draw.rect(screen, (0, 255, 0), (bar_x, bar_y, filled_width, bar_height))
+
+        # Vẽ thanh thể lực trên đầu master
+        draw_stamina_bar(screen, master_pos, MASTER_SIZE, master_stamina, MASTER_MAX_STAMINA, SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y)
 
         thief_img = thief_sprites[thief_direction][thief_frame]
         screen.blit(thief_img, (thief_pos[1] * SCALED_GRID_SIZE + OFFSET_X, thief_pos[0] * SCALED_GRID_SIZE + OFFSET_Y))
@@ -669,9 +692,10 @@ while True:
         master_img = master_idle_sprites[master_direction][0] if is_master_resting else master_sprites[master_direction][master_frame]
         screen.blit(master_img, (master_pos[1] * SCALED_GRID_SIZE + OFFSET_X, master_pos[0] * SCALED_GRID_SIZE + OFFSET_Y))
 
-        for item_pos, coin_type in item_coins:
-            coin_img = coin_sprites[coin_type][coin_frame]
-            screen.blit(coin_img, (item_pos[1] * SCALED_GRID_SIZE + OFFSET_X, item_pos[0] * SCALED_GRID_SIZE + OFFSET_Y))
+        for item_pos, coin_type, collected in item_coins:
+            if not collected:
+                coin_img = coin_sprites[coin_type][coin_frame]
+                screen.blit(coin_img, (item_pos[1] * SCALED_GRID_SIZE + OFFSET_X, item_pos[0] * SCALED_GRID_SIZE + OFFSET_Y))
 
         screen.blit(exit_img, (exit_pos[1] * SCALED_GRID_SIZE + OFFSET_X, exit_pos[0] * SCALED_GRID_SIZE + OFFSET_Y))
 

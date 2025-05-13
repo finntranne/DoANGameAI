@@ -6,7 +6,7 @@ from collections import deque
 from config import *
 from utils import check_furniture_collision, find_nearest_free_position
 
-def create_thief_vision_zone(thief_pos, direction, rows, cols):
+def create_thief_vision_zone(thief_pos,direction, rows, cols):
     row, col = thief_pos
     vision_range = THIEF_VISION_RANGE
     zone = set()
@@ -224,7 +224,7 @@ def a_star(start, goal, grid, character_size, furniture_rects, scaled_grid_size,
     
     end_time = time.time()
     execution_time = end_time - start_time
-    print("A* Search: No path found!")
+    print(f"A* Search: from {start} to {goal} No path found!")
     return None, expanded_nodes, execution_time
 
 def uniform_cost_search(start, goal, grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols):
@@ -655,3 +655,109 @@ def master_chase(master_pos, thief_pos, map_grid, character_size, furniture_rect
                  scaled_grid_size, offset_x, offset_y, rows, cols):
     return a_star(master_pos, thief_pos, map_grid, character_size, furniture_rects, 
                   scaled_grid_size, offset_x, offset_y, rows, cols)
+
+
+        # while(True):
+        #     random_target = random.choice(known_free_cells)
+        #     if random_target not in visited:
+        #         return random_target
+
+    # for i in range(rows):
+    #     for j in range(cols):
+    #         if map_thief[i][j] != 0 or (i, j) in visited:
+    #             continue
+    #         # Kiểm tra các ô kề
+    #         neighbors = [(i-1,j), (i+1,j), (i,j-1), (i,j+1)]
+    #         for ni, nj in neighbors:
+    #             if 0 <= ni < rows and 0 <= nj < cols and map_thief[ni][nj] is None:
+    #                 return [i, j]
+
+
+# def partial_observe(thief_pos, exit_pos, map_grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols,items,map_thief,queue_visited,visited):
+#     if thief_pos is None or exit_pos is None:
+#         print("Error: Start or goal position is None!")
+#         return None, 0, 0
+
+#     adjusted_start = find_nearest_free_position(thief_pos, character_size, furniture_rects, map_grid, 
+#                                                scaled_grid_size, offset_x, offset_y, rows, cols)
+#     if adjusted_start != thief_pos:
+#         print(f"Adjusted start position from {thief_pos} to {adjusted_start}")
+#         thief_pos = adjusted_start
+
+#     for pos in create_thief_vision_zone(thief_pos,"",rows, cols):
+#         x,y = pos[0],pos[1]
+#         map_thief[x][y] = map_grid[x][y]
+#         if(map_grid[x][y]==0 and [x,y] not in queue_visited and [x,y] not in visited and [x,y]!=exit_pos):
+#             queue_visited.append([x,y])
+
+#     for pos_item in items:
+#         if map_thief[pos_item[0]][pos_item[1]] == 0:
+#             path, expanded_nodes, execution_time = a_star(thief_pos, pos_item , map_thief, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols)
+#             return map_thief,path,expanded_nodes, execution_time,queue_visited,visited
+        
+#     if thief_pos == queue_visited[0]:
+#         visited.append(queue_visited[0])
+#         queue_visited.pop(0)
+        
+#     path, expanded_nodes, execution_time = a_star(thief_pos,queue_visited[0], map_thief, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, rows, cols)
+#     if path == None:
+#         visited.append(queue_visited[0])
+#         queue_visited.pop(0)
+#     return map_thief,path,expanded_nodes, execution_time,queue_visited,visited
+
+def partial_observe(thief_pos, exit_pos, map_grid, character_size, furniture_rects, 
+                    scaled_grid_size, offset_x, offset_y, rows, cols,
+                    items, map_thief, queue_visited, visited):
+
+    if thief_pos is None or exit_pos is None:
+        print("Error: Start or goal position is None!")
+        return None, 0, 0
+
+    adjusted_start = find_nearest_free_position(thief_pos, character_size, furniture_rects, map_grid, 
+                                                scaled_grid_size, offset_x, offset_y, rows, cols)
+    if adjusted_start != thief_pos:
+        print(f"Adjusted start position from {thief_pos} to {adjusted_start}")
+        thief_pos = adjusted_start
+
+    # Tạo một tập để kiểm tra tồn tại nhanh hơn
+    queue_set = set([tuple(pos[1]) for pos in queue_visited])  # pos là (-priority, [x, y])
+
+    for pos in create_thief_vision_zone(thief_pos, "", rows, cols):
+        x, y = pos[0], pos[1]
+        map_thief[x][y] = map_grid[x][y]
+        if (map_grid[x][y] == 0 and 
+            (x, y) not in queue_set and 
+            [x, y] not in visited and 
+            [x, y] != exit_pos):
+            
+            priority = x + y
+            heapq.heappush(queue_visited, (-priority, [x, y]))
+            queue_set.add((x, y))
+
+    for pos_item in items:
+        if map_thief[pos_item[0]][pos_item[1]] == 0:
+            path, expanded_nodes, execution_time = a_star(
+                thief_pos, pos_item, map_thief, character_size, furniture_rects, 
+                scaled_grid_size, offset_x, offset_y, rows, cols)
+            return map_thief, path, expanded_nodes, execution_time, queue_visited, visited
+
+    if queue_visited:
+        _, current_pos = queue_visited[0]
+        if thief_pos == current_pos:
+            visited.append(current_pos)
+            heapq.heappop(queue_visited)
+
+    if queue_visited:
+        _, target = queue_visited[0]
+        path, expanded_nodes, execution_time = a_star(
+            thief_pos, target, map_thief, character_size, furniture_rects, 
+            scaled_grid_size, offset_x, offset_y, rows, cols)
+
+        if path is None:
+            visited.append(target)
+            heapq.heappop(queue_visited)
+
+        return map_thief, path, expanded_nodes, execution_time, queue_visited, visited
+
+    # Nếu không còn gì trong hàng đợi
+    return map_thief, [], 0, 0, queue_visited, visited

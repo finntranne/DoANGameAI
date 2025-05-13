@@ -66,7 +66,8 @@ AI_ALGORITHMS = {
     "Steepest Hill Climbing": "steepest_hill_climbing",
     "Stochastic Hill Climbing": "stochastic_hill_climbing",
     "Simulated Annealing": "simulated_annealing",
-    "Beam Search": "beam_search"
+    "Beam Search": "beam_search",
+    "partial_observe":"partial_observe"
 }
 
 # Danh sách bản đồ

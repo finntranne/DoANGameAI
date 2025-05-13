@@ -60,7 +60,8 @@ AI_ALGORITHM_FUNCTIONS = {
     "Steepest Hill Climbing": steepest_hill_climbing,
     "Stochastic Hill Climbing": stochastic_hill_climbing,
     "Simulated Annealing": simulated_annealing,
-    "Beam Search": beam_search
+    "Beam Search": beam_search,
+    "partial_observe" : partial_observe
 }
 
 # Khởi tạo menu chính và menu tạm dừng
@@ -108,6 +109,13 @@ total_completion_time = 0
 total_expanded_nodes = 0
 total_execution_time = 0
 run_stats = []
+
+
+#partial_value
+map_thief = [[None] * 48 for _ in range(32)]
+visited = []
+queue_visit = []
+
 
 def transition_effect(screen, message, color, duration=2000):
     overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -424,14 +432,22 @@ while True:
 
                 # Logic di chuyển của thief
                 if is_thief_detected:
-                    path, expanded_nodes, execution_time = algorithm(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
+                    path, expanded_nodes, execution_time = a_star(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
                                                                     SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
                 else:
                     if collected_items < len(items):
-                        path, expanded_nodes, execution_time = algorithm(thief_pos, items[collected_items], map_grid, THIEF_SIZE, furniture_rects, 
+                        if selected_params["algorithm"] == "partial_observe":
+                            map_thief,path,expanded_nodes, execution_time,queue_visit,visited = algorithm(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
+                                                                    SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS,items,map_thief,queue_visit,visited)
+                        else:
+                            path, expanded_nodes, execution_time = algorithm(thief_pos, items[collected_items], map_grid, THIEF_SIZE, furniture_rects, 
                                                                         SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
                     else:
-                        path, expanded_nodes, execution_time = algorithm(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
+                        if selected_params["algorithm"] == "partial_observe":
+                            map_thief,path, expanded_nodes, execution_time = a_star(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
+                                                                    SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS,items,map_thief,visited)
+                        else:
+                            path, expanded_nodes, execution_time = algorithm(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
                                                                         SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
 
                 total_expanded_nodes += expanded_nodes
@@ -458,6 +474,8 @@ while True:
                             for i, (item_pos, _) in enumerate(item_coins):
                                 if thief_pos == item_pos:
                                     item_coins.pop(i)
+                                    #new_line 
+                                    items.pop(i)
                                     collected_items += 1
                                     if sound_enabled and gold_sound:
                                         if current_music:

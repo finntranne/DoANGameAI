@@ -234,8 +234,6 @@ while True:
                         coin_sprites = load_coin_sprites(SCALED_GRID_SIZE)
                         trap_sprites, TRAP_SIZE = load_trap_sprites(SCALED_GRID_SIZE)
                         thief_pos, master_pos, items, traps, exit_pos = load_positions(tmx_data)
-                        for trap in traps:
-                            trap["triggered"] = False
                         print(f"Loaded traps: {traps}")
                         if not traps:
                             print("Warning: No traps found in the map!")
@@ -339,8 +337,6 @@ while True:
                 current_run += 1
                 if current_run < selected_params["num_runs"]:
                     thief_pos, master_pos, items, traps, exit_pos = load_positions(tmx_data)
-                    for trap in traps:
-                        trap["triggered"] = False
                     print(f"Reloaded traps for run {current_run + 1}: {traps}")
                     if not traps:
                         print("Warning: No traps found in the map during reset!")
@@ -423,7 +419,15 @@ while True:
                         if is_thief_detected and alert_sound:
                             alert_sound.play()
                         play_background_music()
-                    if not is_thief_detected:
+                    if is_thief_detected:
+                        # Khi phát hiện trộm, hủy đường đi tuần tra và chuyển sang đuổi ngay
+                        master_waypoints = []
+                        master_path = None
+                        master_patrol_counter = 0
+                        is_master_resting = False
+                        rest_timer = 0
+                        print("Master detected thief, switching to chase mode immediately")
+                    else:
                         # Khi ngừng truy đuổi, xóa các waypoint cũ và đặt lại đường đi
                         master_waypoints = []
                         master_path = None
@@ -445,26 +449,26 @@ while True:
 
                 # Logic di chuyển của thief
                 available_coins = [(pos, coin_type) for pos, coin_type, collected in item_coins if not collected]
-                if is_thief_detected or zones_intersect:
+                if is_thief_detected:
                     # Trộm chạy về phía cửa thoát
                     path, expanded_nodes, execution_time = algorithm(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
-                                                                    SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
+                                                                    SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS, traps)
                 else:
                     # Trộm tìm coin gần nhất chưa được nhặt
                     if available_coins:
                         nearest_coin = min(available_coins, key=lambda x: calculate_distance(thief_pos, x[0]))
                         path, expanded_nodes, execution_time = algorithm(thief_pos, nearest_coin[0], map_grid, THIEF_SIZE, furniture_rects, 
-                                                                        SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
+                                                                        SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS, traps)
                     else:
                         # Nếu không còn coin, chạy về cửa thoát
                         path, expanded_nodes, execution_time = algorithm(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
-                                                                        SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
+                                                                        SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS, traps)
 
                 # Logic di chuyển của master
                 if is_thief_detected:
                     if master_path is None or len(master_path) <= 1:
                         master_path, _, _ = master_chase(master_pos, thief_pos, map_grid, MASTER_SIZE, furniture_rects, 
-                                                        SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
+                                                        SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS, traps)
                     is_master_resting = False
                     rest_timer = 0
                     master_patrol_counter = 0
@@ -493,7 +497,7 @@ while True:
                     else:
                         if master_path is None or len(master_path) <= 1:
                             master_path, _, _ = master_patrol(master_pos, master_waypoints, map_grid, ROWS, COLS, MASTER_SIZE, 
-                                                            furniture_rects, SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y)
+                                                            furniture_rects, SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, traps)
                             if master_path is None or len(master_path) <= 1:
                                 if master_waypoints:
                                     print("Removing unreachable waypoint:", master_waypoints[0])
@@ -584,13 +588,11 @@ while True:
                             game_over = True
                     else:
                         path = None
-
                 # Kiểm tra va chạm với trap
                 trap_type = check_trap_collision(thief_pos, THIEF_SIZE, traps, SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y)
                 if trap_type:
                     for trap in traps:
-                        if trap["pos"] == thief_pos and not trap["triggered"]:
-                            trap["triggered"] = True
+                        if trap["pos"] == thief_pos:
                             print(f"Run {current_run + 1}/{selected_params['num_runs']}: Ten trom bi bat boi {trap_type} trap")
                             blood -= 5
                             print("dap bay")

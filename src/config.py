@@ -39,8 +39,8 @@ THIEF_MAX_HEALTH = 100
 THIEF_TRAP_DAMAGE = 5
 MASTER_MAX_STAMINA = 100
 MASTER_STAMINA_DRAIN_RATE = 5  # Giảm 2 thể lực mỗi giây khi truy đuổi
-MASTER_STAMINA_RECOVER_RATE = 5  # Hồi 5 thể lực mỗi giây khi tuần tra
-LOW_STAMINA_THRESHOLD = 0
+MASTER_STAMINA_RECOVER_RATE = 2  # Hồi 5 thể lực mỗi giây khi tuần tra
+LOW_STAMINA_THRESHOLD = 20
 blood = 100
 MAX_BLOOD = 100
 master_stamina = MASTER_MAX_STAMINA  # Thể lực ban đầu của master
@@ -80,4 +80,9 @@ MAPS = {
     "Map 7": "map/7.tmx",
     "Map 8": "map/8.tmx",
     "Map 9": "map/9.tmx"
+}
+
+TRAP_COSTS = {
+    "spike": 100,  # Chi phí cho bẫy spike
+    "fire": 200   # Chi phí cho bẫy fire
 }

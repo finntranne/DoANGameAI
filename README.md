@@ -58,11 +58,11 @@ Thief's Escape with Vision Zones là một trò chơi 2D dựa trên lưới, x�
    - Thất bại: Hết máu hoặc bị bắt.
 
 ## Hiệu suất thuật toán
-- **BFS**: Tìm đường ngắn nhất, chậm trên bản đồ lớn.
-- **A***: Tối ưu với heuristic, nhanh hơn BFS.
-- **Beam Search**: Nhanh, giới hạn node, có thể không tối ưu.
-- **Partially Observation**:
-- **Q-Learning**: Học đường đi, lưu Q-table, phù hợp bản đồ cố định.
+- **BFS**: Đáng tin cậy, phù hợp khi cần đảm bảo tìm đường, nhưng tốn tài nguyên và không tối ưu.
+- **A***: Tốt nhất cho các bản đồ có cấu trúc rõ ràng, tối ưu về đường đi và thời gian, nhưng cần heuristic phù hợp.
+- **Beam Search**: Nhanh trong một số trường hợp nhưng không đáng tin cậy, phù hợp cho các tình huống cần tốc độ hơn độ chính xác.
+- **Partially Observation**: Phù hợp cho môi trường có thông tin hạn chế, nhưng hiệu suất kém khi quan sát bị giới hạn nghiêm trọng.
+- **Q-Learning**: Linh hoạt, thích nghi tốt với môi trường phức tạp, nhưng tốn tài nguyên và không ổn định về đường đi.
 
   - ![Biểu đồ Completion Time](assets/images/completion_time.png)
   - ![Biểu đồ Expanded Nodes](assets/images/expanded_nodes.png)
@@ -71,6 +71,8 @@ Thief's Escape with Vision Zones là một trò chơi 2D dựa trên lưới, x�
   - ![Biểu đồ Coins](assets/images/collected_coins.png)
 
 ## Tác giả
-- **Your Name**
-- Liên hệ: [your-email@example.com](mailto:your-email@example.com)
-- GitHub: [your-username](https://github.com/your-username)
+**Nhóm 3**
+- Trần Hữu Thoại - 23110334
+- Nguyễn Hoàng Anh Kiệt - 23110247
+- Ngô Huy Hoàng - 23110220
+

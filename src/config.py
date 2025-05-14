@@ -38,7 +38,7 @@ REST_DURATION = 2  # Thời gian nghỉ 1 giây
 THIEF_MAX_HEALTH = 100
 THIEF_TRAP_DAMAGE = 5
 MASTER_MAX_STAMINA = 100
-MASTER_STAMINA_DRAIN_RATE = 5  # Giảm 2 thể lực mỗi giây khi truy đuổi
+MASTER_STAMINA_DRAIN_RATE = 2  # Giảm 2 thể lực mỗi giây khi truy đuổi
 MASTER_STAMINA_RECOVER_RATE = 2  # Hồi 5 thể lực mỗi giây khi tuần tra
 LOW_STAMINA_THRESHOLD = 20
 blood = 100
@@ -66,7 +66,8 @@ AI_ALGORITHMS = {
     "Breadth-First Search": "bfs",
     "A* Search": "a_star",
     "Beam Search": "beam_search",
-    "Backtracking with AC-3": "backtracking_with_ac3"
+    "partial_observe" : "partial_observe",
+    "Q Learning": "q_learning"
 }
 
 # Danh sách bản đồ
@@ -83,6 +84,6 @@ MAPS = {
 }
 
 TRAP_COSTS = {
-    "spike": 100,  # Chi phí cho bẫy spike
-    "fire": 200   # Chi phí cho bẫy fire
+    "spike": 10,  # Chi phí cho bẫy spike
+    "fire": 15   # Chi phí cho bẫy fire
 }

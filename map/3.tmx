@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="48" height="32" tilewidth="8" tileheight="8" infinite="0" nextlayerid="7" nextobjectid="387">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="48" height="32" tilewidth="8" tileheight="8" infinite="0" nextlayerid="7" nextobjectid="390">
  <tileset firstgid="1" source="../assets/images/furniture.tsx"/>
  <layer id="1" name="Floor" width="48" height="32">
   <data encoding="csv">
@@ -74,15 +74,18 @@
 </data>
  </layer>
  <objectgroup id="4" name="Objects">
-  <object id="211" name="item" type="item" x="360.619" y="48.7689" width="6.8125" height="6.6875"/>
+  <object id="211" name="item" type="item" x="288.229" y="104.644" width="6.8125" height="6.6875"/>
   <object id="213" name="thief" type="thief" x="161.662" y="34.1873" width="3" height="2.875"/>
   <object id="214" name="exit" type="exit" x="163.813" y="20.7146">
    <point/>
   </object>
-  <object id="215" name="item" type="item" x="352.116" y="230.391" width="8.25" height="8.125"/>
-  <object id="229" name="trap" type="fire" x="214" y="212.947" width="8" height="7.9375"/>
-  <object id="362" name="item" type="item" x="168.26" y="232.656" width="6.8125" height="6.6875"/>
-  <object id="380" name="master" type="master" x="65.2813" y="204.177" width="3.6875" height="3.5625"/>
+  <object id="215" name="item" type="item" x="224.892" y="185.477" width="6.03261" height="5.29891"/>
+  <object id="229" name="trap" type="fire" x="192.75" y="217.072" width="6.375" height="6.0625"/>
+  <object id="362" name="item" type="item" x="33.543" y="97.0468" width="5.59511" height="5.90489"/>
+  <object id="380" name="master" type="master" x="81.7358" y="217.586" width="3.6875" height="3.5625"/>
+  <object id="387" name="trap" type="spike" x="265.26" y="96.7159" width="5.8125" height="6.06818"/>
+  <object id="388" name="trap" type="spike" x="224.85" y="169.091" width="5.8125" height="6.06818"/>
+  <object id="389" name="trap" type="fire" x="104.205" y="96.9062" width="6.375" height="6.0625"/>
  </objectgroup>
  <objectgroup id="3" name="FurnitureObjects">
   <object id="234" gid="642" x="348.333" y="40.6667" width="29" height="16"/>

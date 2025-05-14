@@ -69,11 +69,15 @@ def load_positions(tmx_data):
     traps = []
     exit_pos = None
     for obj in tmx_data.objects:
+        # Thử truy xuất class theo nhiều cách
         trap_type = None
+        # Cách 1: Truy xuất trực tiếp thuộc tính 'class'
         trap_type = getattr(obj, 'class', None)
         if trap_type is None:
+            # Cách 2: Truy xuất thuộc tính 'type' (dùng trong Tiled phiên bản cũ)
             trap_type = getattr(obj, 'type', None)
         if trap_type is None:
+            # Cách 3: Truy xuất từ properties (pytmx thường lưu thuộc tính tùy chỉnh ở đây)
             trap_type = getattr(obj, 'properties', {}).get('class', getattr(obj, 'properties', {}).get('trap_type', None))
         
         if obj.name == "thief":

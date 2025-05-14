@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="48" height="32" tilewidth="8" tileheight="8" infinite="0" nextlayerid="7" nextobjectid="300">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="48" height="32" tilewidth="8" tileheight="8" infinite="0" nextlayerid="7" nextobjectid="306">
  <tileset firstgid="1" source="../assets/images/furniture.tsx"/>
  <layer id="1" name="Floor" width="48" height="32">
   <data encoding="csv">
@@ -74,16 +74,22 @@
 </data>
  </layer>
  <objectgroup id="4" name="Objects">
-  <object id="211" name="item" type="item" x="152.556" y="66.6605" width="8.25" height="8.125"/>
+  <object id="211" name="item" type="item" x="169.181" y="49.348" width="5.5" height="5.3125"/>
   <object id="213" name="thief" type="thief" x="192.71" y="247.326" width="3" height="2.875"/>
   <object id="214" name="exit" type="exit" x="207.967" y="254.942">
    <point/>
   </object>
-  <object id="215" name="item" type="item" x="342.07" y="49.2334" width="8.25" height="8.125"/>
-  <object id="216" name="item" type="item" x="35.5605" y="204.916" width="8.25" height="8.125"/>
-  <object id="227" name="trap" type="spike" x="88.125" y="223.875" width="7.8125" height="8.25"/>
-  <object id="229" name="trap" type="fire" x="152" y="224.364" width="8" height="7.9375"/>
-  <object id="299" name="master" type="master" x="31.6823" y="61.7918" width="3.6875" height="3.5625"/>
+  <object id="215" name="item" type="item" x="352.82" y="48.8584" width="6" height="5.875"/>
+  <object id="216" name="item" type="item" x="88.6974" y="233.041" width="5.625" height="5.875"/>
+  <object id="227" name="trap" type="spike" x="89.3582" y="177.337" width="4.8125" height="4.61364"/>
+  <object id="229" name="trap" type="fire" x="113.545" y="216.727" width="4.72727" height="4.9375"/>
+  <object id="299" name="master" type="master" x="41.5573" y="58.2918" width="3.6875" height="3.5625"/>
+  <object id="300" name="trap" type="fire" x="209.011" y="161.281" width="4.72727" height="4.9375"/>
+  <object id="301" name="trap" type="fire" x="217.761" y="161.281" width="4.72727" height="4.9375"/>
+  <object id="302" name="trap" type="fire" x="353.846" y="89.798" width="4.72727" height="4.9375"/>
+  <object id="303" name="trap" type="spike" x="33.4744" y="177.529" width="4.8125" height="4.61364"/>
+  <object id="304" name="trap" type="spike" x="41.5938" y="105.33" width="4.8125" height="4.61364"/>
+  <object id="305" name="trap" type="spike" x="169.641" y="88.4917" width="4.8125" height="4.61364"/>
  </objectgroup>
  <objectgroup id="3" name="FurnitureObjects">
   <object id="32" gid="384" x="7.70249" y="53.4109" width="19.1117" height="32.8181"/>
@@ -121,7 +127,7 @@
   <object id="255" gid="498" x="202.482" y="101.876" width="11" height="26"/>
   <object id="256" gid="498" x="298.316" y="245.785" width="11" height="26"/>
   <object id="257" gid="498" x="360.624" y="246.101" width="11" height="26"/>
-  <object id="258" gid="498" x="115.504" y="245.785" width="11" height="26"/>
+  <object id="258" gid="498" x="120.686" y="248.24" width="7.36364" height="19.7273"/>
   <object id="259" gid="498" x="49.0845" y="245.152" width="11" height="26"/>
   <object id="260" gid="470" x="147.519" y="159.5" width="32" height="16"/>
   <object id="261" gid="633" x="156.058" y="189.863" width="32" height="16"/>

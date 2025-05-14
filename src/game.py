@@ -52,7 +52,8 @@ AI_ALGORITHM_FUNCTIONS = {
     "Breadth-First Search": bfs,
     "A* Search": a_star,
     "Beam Search": beam_search,
-    "Backtracking with AC-3": backtracking_with_ac3
+    "partial_observe" : partial_observe,
+    "Q Learning": q_learning
 }
 
 # Khởi tạo menu chính và menu tạm dừng
@@ -100,6 +101,30 @@ total_completion_time = 0
 total_expanded_nodes = 0
 total_execution_time = 0
 run_stats = []
+
+#partial_value
+map_thief = [[None] * 48 for _ in range(32)]
+visited = []
+queue_visit = []
+
+def generate_patrol_waypoints(master_pos, rows, cols, map_grid, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y, traps, num_waypoints=12):
+    waypoints = []
+    trap_positions = {tuple(trap["pos"]) for trap in traps} if traps else set()
+    attempts = 0
+    max_attempts = 100
+    while len(waypoints) < num_waypoints and attempts < max_attempts:
+        x = random.randint(1, rows - 2)
+        y = random.randint(1, cols - 2)
+        pos = [x, y]
+        if (map_grid[x][y] == 0 and 
+            not check_furniture_collision(pos, character_size, furniture_rects, scaled_grid_size, offset_x, offset_y) and 
+            tuple(pos) not in trap_positions and 
+            pos not in waypoints):
+            waypoints.append(pos)
+        attempts += 1
+    if len(waypoints) < num_waypoints:
+        print(f"Warning: Only generated {len(waypoints)} waypoints after {max_attempts} attempts")
+    return waypoints
 
 def transition_effect(screen, message, color, duration=2000):
     overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -166,11 +191,53 @@ def stop_menu_music():
         menu_music.stop()
         menu_music_playing = False
 
+def reset_game_state():
+    global thief_pos, master_pos, items, traps, exit_pos, item_coins, collected_items, path, master_waypoints, master_path, game_over, thief_direction, master_direction, thief_frame, master_frame, coin_frame, trap_frame, frame_counter, master_patrol_counter, is_thief_detected, last_detected_state, is_master_resting, rest_timer, master_stamina, blood, run_start_time, path_length, map_thief, visited, queue_visit
+    thief_pos, master_pos, items, traps, exit_pos = load_positions(tmx_data)
+    if not traps:
+        print("Warning: No traps found in the map during reset!")
+    if thief_pos is None:
+        thief_pos = [1, 1]
+    else:
+        thief_pos = find_nearest_free_position(thief_pos, THIEF_SIZE, furniture_rects, map_grid, 
+                                              SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
+    if master_pos is None:
+        master_pos = [5, 5]
+    else:
+        master_pos = find_nearest_free_position(master_pos, MASTER_SIZE, furniture_rects, map_grid, 
+                                               SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
+    if exit_pos is None:
+        exit_pos = [10, 10]
+    item_coins = [(pos, coin_types[i % len(coin_types)], False) for i, pos in enumerate(items)]
+    collected_items = 0
+    path = None
+    master_waypoints = []
+    master_path = None
+    game_over = False
+    thief_direction = "right"
+    master_direction = "right"
+    thief_frame = 0
+    master_frame = 0
+    coin_frame = 0
+    trap_frame = 0
+    frame_counter = 0
+    master_patrol_counter = 0
+    is_thief_detected = False
+    last_detected_state = False
+    is_master_resting = False
+    rest_timer = 0
+    master_stamina = MASTER_MAX_STAMINA
+    blood = MAX_BLOOD  # Reset blood to MAX_BLOOD
+    run_start_time = time.time()
+    path_length = 0
+    map_thief = [[None] * 48 for _ in range(32)]
+    visited = []
+    queue_visit = []
+
 # Vòng lặp chính
 clock = pygame.time.Clock()
 play_menu_music()
 while True:
-    print("blood:", blood)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             if state == "game":
@@ -234,47 +301,11 @@ while True:
                         coin_sprites = load_coin_sprites(SCALED_GRID_SIZE)
                         trap_sprites, TRAP_SIZE = load_trap_sprites(SCALED_GRID_SIZE)
                         thief_pos, master_pos, items, traps, exit_pos = load_positions(tmx_data)
-                        print(f"Loaded traps: {traps}")
-                        if not traps:
-                            print("Warning: No traps found in the map!")
-                        if thief_pos is None:
-                            print("Warning: Thief position not found in the map! Using default position.")
-                            thief_pos = [1, 1]
-                        else:
-                            thief_pos = find_nearest_free_position(thief_pos, THIEF_SIZE, furniture_rects, map_grid, 
-                                                                  SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
-                        if master_pos is None:
-                            print("Warning: Master position not found in the map! Using default position.")
-                            master_pos = [5, 5]
-                        else:
-                            master_pos = find_nearest_free_position(master_pos, MASTER_SIZE, furniture_rects, map_grid, 
-                                                                   SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
-                        if exit_pos is None:
-                            print("Warning: Exit position not found in the map! Using default position.")
-                            exit_pos = [10, 10]
                         coin_types = ["red", "silver", "gold"]
                         item_coins = [(pos, coin_types[i % len(coin_types)], False) for i, pos in enumerate(items)]
                         exit_img = pygame.Surface((SCALED_GRID_SIZE, SCALED_GRID_SIZE))
                         exit_img.fill(WHITE)
-                        collected_items = 0
-                        path = None
-                        master_waypoints = []
-                        master_path = None
-                        game_over = False
-                        thief_direction = "right"
-                        master_direction = "right"
-                        thief_frame = 0
-                        master_frame = 0
-                        coin_frame = 0
-                        trap_frame = 0
-                        frame_counter = 0
-                        master_patrol_counter = 0
-                        is_thief_detected = False
-                        last_detected_state = False
-                        is_master_resting = False
-                        rest_timer = 0
-                        run_start_time = time.time()
-                        path_length = 0
+                        reset_game_state()
                         play_background_music()
             elif menu_state == "options":
                 result = option_menu.handle_event(event, sound_enabled)
@@ -336,43 +367,7 @@ while True:
             if game_over:
                 current_run += 1
                 if current_run < selected_params["num_runs"]:
-                    thief_pos, master_pos, items, traps, exit_pos = load_positions(tmx_data)
-                    print(f"Reloaded traps for run {current_run + 1}: {traps}")
-                    if not traps:
-                        print("Warning: No traps found in the map during reset!")
-                    if thief_pos is None:
-                        thief_pos = [1, 1]
-                    else:
-                        thief_pos = find_nearest_free_position(thief_pos, THIEF_SIZE, furniture_rects, map_grid, 
-                                                              SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
-                    if master_pos is None:
-                        master_pos = [5, 5]
-                    else:
-                        master_pos = find_nearest_free_position(master_pos, MASTER_SIZE, furniture_rects, map_grid, 
-                                                               SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS)
-                    if exit_pos is None:
-                        exit_pos = [10, 10]
-                    item_coins = [(pos, coin_types[i % len(coin_types)], False) for i, pos in enumerate(items)]
-                    collected_items = 0
-                    path = None
-                    master_waypoints = []
-                    master_path = None
-                    game_over = False
-                    thief_direction = "right"
-                    master_direction = "right"
-                    thief_frame = 0
-                    master_frame = 0
-                    coin_frame = 0
-                    trap_frame = 0
-                    frame_counter = 0
-                    master_patrol_counter = 0
-                    is_thief_detected = False
-                    last_detected_state = False
-                    is_master_resting = False
-                    rest_timer = 0
-                    master_stamina = MASTER_MAX_STAMINA
-                    run_start_time = time.time()
-                    path_length = 0
+                    reset_game_state()
                     play_background_music()
                 else:
                     print("Saving stats to stats.csv in append mode...")
@@ -384,7 +379,8 @@ while True:
                             print("Writing CSV header...")
                             writer.writerow([
                                 "Run", "Algorithm", "Map", "Success", "Path_Length", 
-                                "Completion_Time", "Expanded_Nodes", "Execution_Time"
+                                "Completion_Time", "Expanded_Nodes", "Collected_Coins", 
+                                "Remaining_Blood"
                             ])
                         print(f"Appending {len(run_stats)} records to stats.csv...")
                         for stat in run_stats:
@@ -398,11 +394,20 @@ while True:
                 algorithm = AI_ALGORITHM_FUNCTIONS[selected_params["algorithm"]]
                 if algorithm is None:
                     print(f"Thuật toán {selected_params['algorithm']} chưa được triển khai!")
-                    state = "menu"
-                    menu_state = "main"
-                    if current_music:
-                        current_music.stop()
-                    play_menu_music()
+                    run_stats.append([
+                        current_run + 1, selected_params["algorithm"], selected_params["map"],
+                        0, 0, 0, 0, collected_items, blood
+                    ])
+                    current_run += 1
+                    if current_run < selected_params["num_runs"]:
+                        reset_game_state()  # Reset khi thuật toán không tồn tại
+                        play_background_music()
+                    else:
+                        state = "menu"
+                        menu_state = "main"
+                        if current_music:
+                            current_music.stop()
+                        play_menu_music()
                     continue
 
                 # Kiểm tra giao nhau giữa vùng tầm nhìn
@@ -411,7 +416,14 @@ while True:
                 zones_intersect = check_vision_zone_intersection(thief_zone, master_zone)
 
                 # Cập nhật trạng thái phát hiện
-                new_detected_state = zones_intersect and master_stamina > 0
+                if zones_intersect:
+                    detection_timer += 1 / 10
+                    if detection_timer >= 0.1:  # Tăng lên 1 giây
+                        new_detected_state = True
+                else:
+                    detection_timer = 0
+                    new_detected_state = False
+                    
                 if new_detected_state != last_detected_state:
                     is_thief_detected = new_detected_state
                     last_detected_state = new_detected_state
@@ -428,41 +440,65 @@ while True:
                         rest_timer = 0
                         print("Master detected thief, switching to chase mode immediately")
                     else:
-                        # Khi ngừng truy đuổi, xóa các waypoint cũ và đặt lại đường đi
-                        master_waypoints = []
+                        # Giữ waypoint cuối hoặc tạo mới nếu rỗng
+                        if master_waypoints and isinstance(master_waypoints[-1], list) and len(master_waypoints[-1]) == 2:
+                            master_waypoints = [master_waypoints[-1]]
+                        else:
+                            master_waypoints = generate_patrol_waypoints(master_pos, ROWS, COLS, map_grid, MASTER_SIZE, furniture_rects, 
+                                                                        SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, traps, num_waypoints=12)
                         master_path = None
                         master_patrol_counter = 0
                         is_master_resting = False
                         rest_timer = 0
-                        print("Master switching to patrol mode, generating new waypoint")
+                        print("Master switching to patrol mode, using last waypoint or generating new waypoints")
 
                 # Quản lý thể lực của master
-                if is_thief_detected:
+                if is_thief_detected and zones_intersect > 0:
                     master_stamina -= MASTER_STAMINA_DRAIN_RATE
                     if master_stamina <= 0:
                         is_thief_detected = False
                         last_detected_state = False
                         master_path = None
-                        print("Master exhausted, switching to patrol mode")
+                        is_master_resting = False
+                        rest_timer = 0
+                        master_patrol_counter = 0
+                        # Tạo hoặc sử dụng waypoints khi mệt
+                        if not master_waypoints:
+                            master_waypoints = generate_patrol_waypoints(master_pos, ROWS, COLS, map_grid, MASTER_SIZE, furniture_rects, 
+                                                                        SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, traps, num_waypoints=12)
+                        print("Master exhausted, switching to patrol mode with existing or new waypoints")
                 else:
                     master_stamina = min(master_stamina + MASTER_STAMINA_RECOVER_RATE, MASTER_MAX_STAMINA)
 
                 # Logic di chuyển của thief
                 available_coins = [(pos, coin_type) for pos, coin_type, collected in item_coins if not collected]
                 if is_thief_detected:
-                    # Trộm chạy về phía cửa thoát
-                    path, expanded_nodes, execution_time = algorithm(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
-                                                                    SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS, traps)
-                else:
-                    # Trộm tìm coin gần nhất chưa được nhặt
-                    if available_coins:
-                        nearest_coin = min(available_coins, key=lambda x: calculate_distance(thief_pos, x[0]))
-                        path, expanded_nodes, execution_time = algorithm(thief_pos, nearest_coin[0], map_grid, THIEF_SIZE, furniture_rects, 
-                                                                        SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS, traps)
+                    if selected_params["algorithm"] == "partial_observe":
+                        map_thief,path,expanded_nodes, execution_time,queue_visit,visited = algorithm(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
+                                                                    SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS,items,map_thief,queue_visit,visited, traps)
                     else:
-                        # Nếu không còn coin, chạy về cửa thoát
+                        # Trộm chạy về phía cửa thoát
                         path, expanded_nodes, execution_time = algorithm(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
                                                                         SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS, traps)
+                else:
+                    if selected_params["algorithm"] == "partial_observe":
+                        print(len(items))
+                        if len(items) > 0:
+                            map_thief, path,expanded_nodes, execution_time,queue_visit,visited = algorithm(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
+                                                                    SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS,items,map_thief,queue_visit,visited, traps)
+                        else:
+                            path, expanded_nodes, execution_time = a_star(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
+                                                                            SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS, traps)
+                    if selected_params["algorithm"] != "partial_observe":
+                        # Trộm tìm coin gần nhất chưa được nhặt
+                        if available_coins:
+                            nearest_coin = min(available_coins, key=lambda x: calculate_distance(thief_pos, x[0]))
+                            path, expanded_nodes, execution_time = algorithm(thief_pos, nearest_coin[0], map_grid, THIEF_SIZE, furniture_rects, 
+                                                                            SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS, traps)
+                        else:
+                            # Nếu không còn coin, chạy về cửa thoát
+                            path, expanded_nodes, execution_time = algorithm(thief_pos, exit_pos, map_grid, THIEF_SIZE, furniture_rects, 
+                                                                            SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, ROWS, COLS, traps)
 
                 # Logic di chuyển của master
                 if is_thief_detected:
@@ -496,6 +532,11 @@ while True:
                             master_path = None
                     else:
                         if master_path is None or len(master_path) <= 1:
+                            # Kiểm tra định dạng master_waypoints
+                            if master_waypoints and not all(isinstance(wp, list) and len(wp) == 2 and all(isinstance(coord, int) for coord in wp) for wp in master_waypoints):
+                                print(f"Invalid waypoints detected: {master_waypoints}, regenerating waypoints")
+                                master_waypoints = generate_patrol_waypoints(master_pos, ROWS, COLS, map_grid, MASTER_SIZE, furniture_rects, 
+                                                                            SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, traps, num_waypoints=12)
                             master_path, _, _ = master_patrol(master_pos, master_waypoints, map_grid, ROWS, COLS, MASTER_SIZE, 
                                                             furniture_rects, SCALED_GRID_SIZE, OFFSET_X, OFFSET_Y, traps)
                             if master_path is None or len(master_path) <= 1:
@@ -553,6 +594,8 @@ while True:
                             for i, (item_pos, coin_type, collected) in enumerate(item_coins):
                                 if thief_pos == item_pos and not collected:
                                     item_coins[i] = (item_pos, coin_type, True)
+                                    if selected_params["algorithm"] == "partial_observe":
+                                        items.remove(item_pos)
                                     collected_items += 1
                                     if sound_enabled and gold_sound:
                                         if current_music:
@@ -568,7 +611,8 @@ while True:
                             total_path_length += path_length
                             run_stats.append([
                                 current_run + 1, selected_params["algorithm"], selected_params["map"],
-                                1, path_length, completion_time, expanded_nodes, execution_time
+                                1, path_length, completion_time, expanded_nodes, 
+                                collected_items, blood
                             ])
                             if collected_items < len(items):
                                 print(f"Run {current_run + 1}/{selected_params['num_runs']}: Ten trom da thoat nhung chua thu thap du item")
@@ -597,8 +641,6 @@ while True:
                             blood -= 5
                             print("dap bay")
                             if sound_enabled:
-                                if current_music:
-                                    current_music.stop()
                                 if hurt_sound:
                                     hurt_sound.play()
                             print(f"Trap triggered at {thief_pos}, Blood remaining: {blood}")
@@ -608,6 +650,12 @@ while True:
                         if sound_enabled and game_over_sound:
                             game_over_sound.play()
                         transition_effect(screen, "Game Over!", (255, 0, 0))
+                        completion_time = time.time() - run_start_time
+                        run_stats.append([
+                            current_run + 1, selected_params["algorithm"], selected_params["map"],
+                            0, path_length, completion_time, expanded_nodes, 
+                            collected_items, blood
+                        ])
                         game_over = True
                         current_run = selected_params["num_runs"]
                         state = "menu"
@@ -625,7 +673,8 @@ while True:
                     total_path_length += path_length
                     run_stats.append([
                         current_run + 1, selected_params["algorithm"], selected_params["map"],
-                        0, path_length, completion_time, expanded_nodes, execution_time
+                        0, path_length, completion_time, expanded_nodes, 
+                        collected_items, blood
                     ])
                     if sound_enabled:
                         if current_music:

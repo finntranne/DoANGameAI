@@ -74,21 +74,18 @@
 </data>
  </layer>
  <objectgroup id="4" name="Objects">
-  <object id="211" name="item" type="item" x="292.224" y="71.405" width="8.25" height="8.125"/>
-  <object id="212" name="master" type="master" x="200" y="112" width="3.6875" height="3.5625"/>
+  <object id="211" name="item" type="item" x="297.818" y="83.4545" width="4.52273" height="4.57955"/>
+  <object id="212" name="master" type="master" x="40.3333" y="225.667" width="3.6875" height="3.5625"/>
   <object id="213" name="thief" type="thief" x="32" y="40" width="3" height="2.875"/>
   <object id="214" name="exit" type="exit" x="33.0625" y="13.9334">
    <point/>
   </object>
-  <object id="215" name="item" type="item" x="354.008" y="172.25" width="8.25" height="8.125"/>
-  <object id="216" name="item" type="item" x="111.194" y="110.456" width="8.25" height="8.125"/>
-  <object id="227" name="trap" type="spike" x="105.096" y="225.193" width="4.9375" height="4.75"/>
-  <object id="229" name="trap" type="fire" x="343.136" y="230.485" width="8" height="7.9375"/>
-  <object id="329" name="trap" type="spike" x="104.889" y="216.938" width="4.5625" height="4.5"/>
-  <object id="330" name="trap" type="spike" x="112.571" y="216.227" width="5.9375" height="6"/>
+  <object id="215" name="item" type="item" x="105.612" y="105.188" width="4.4375" height="4.4375"/>
+  <object id="216" name="item" type="item" x="97.164" y="193.513" width="4.5" height="4.5"/>
+  <object id="227" name="trap" type="spike" x="258.005" y="97.7385" width="4.9375" height="4.75"/>
+  <object id="329" name="trap" type="spike" x="258.162" y="89.4835" width="4.5625" height="4.5"/>
+  <object id="330" name="trap" type="spike" x="192.753" y="232.841" width="5.9375" height="6"/>
   <object id="331" name="trap" type="spike" x="112.269" y="225.381" width="6.3125" height="5.625"/>
-  <object id="332" name="trap" type="fire" x="317.818" y="231.486" width="8" height="7.9375"/>
-  <object id="339" name="item" type="item" x="79.2083" y="222.604" width="8.25" height="8.125"/>
  </objectgroup>
  <objectgroup id="3" name="FurnitureObjects">
   <object id="31" gid="173" x="104" y="176" width="14.625" height="29.625"/>
@@ -144,7 +141,5 @@
   <object id="326" gid="564" x="199.458" y="200.458" width="15" height="24"/>
   <object id="327" gid="509" x="354.792" y="225.208" width="13" height="16"/>
   <object id="328" gid="2147484212" x="361.542" y="229.458" width="15" height="24"/>
-  <object id="333" name="trap" type="fire" x="91.386" y="194.622" width="4.375" height="4.3125"/>
-  <object id="334" name="trap" type="fire" x="98.131" y="180.304" width="4.75" height="4.1875"/>
  </objectgroup>
 </map>

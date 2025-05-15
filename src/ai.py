@@ -115,7 +115,7 @@ def a_star(start, goal, grid, character_size, furniture_rects, scaled_grid_size,
     visited = {tuple(start): 0}
     
     while pq:
-        _, cost, path = heapq.heappop(pq)
+        _, cost, path = heapq.heappop(pq)   
         x, y = path[-1]
         
         if [x, y] == goal:

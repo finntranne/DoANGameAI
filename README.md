@@ -59,11 +59,11 @@ Thief's Escape with Vision Zones là một trò chơi 2D dựa trên lưới, x�
 ## Demo trò chơi
 | Thuật toán | GIF |
 |------------|-----|
-| **BFS** | <img src="assets/images/bfs.gif" width="500" alt="BFS"> |
-| **ASTAR** | <img src="assets/images/astar.gif" width="500" alt="ASTAR"> |
-| **PartialObservation** | <img src="assets/images/partialobservation.gif" width="500" alt="Partial Observation"> |
-| **BeamSearch** | <img src="assets/images/beam.gif" width="500" alt="Beam Search"> |
-| **Q-Learning** | <img src="assets/images/qlearning.gif" width="500" alt="Q-Learning"> |
+| **BFS** | <img src="assets/images/bfs.gif" width="600" alt="BFS"> |
+| **ASTAR** | <img src="assets/images/astar.gif" width="600" alt="ASTAR"> |
+| **PartialObservation** | <img src="assets/images/partialobservation.gif" width="600" alt="Partial Observation"> |
+| **BeamSearch** | <img src="assets/images/beam.gif" width="600" alt="Beam Search"> |
+| **Q-Learning** | <img src="assets/images/qlearning.gif" width="600" alt="Q-Learning"> |
 
 ## Hiệu suất thuật toán
 - **BFS**: Đáng tin cậy, phù hợp khi cần đảm bảo tìm đường, nhưng tốn tài nguyên và không tối ưu.
